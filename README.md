@@ -142,6 +142,8 @@ qiime feature-classifier fit-classifier-naive-bayes \
 
 `get-pr2-data` requires a stable internet connection (it downloads directly from PR2) and step 3 is the most memory/time-intensive of the three - expect it to take a while and to need a reasonable amount of RAM, so run it on a compute node/allocation rather than a login node if you're on an HPC.
 
+Code for how to train a taxonomic classifier on the SILVA database can be found [here](https://github.com/tripitakit/qiime2class). Some databases provide taxonomic classifiers for QIIME2 also on their websites. 
+
 > **Version discrepancy, flagged rather than silently resolved:** the folder-set-up footnote above states the classifier was trained with QIIME2 v2026.4.0 on PR2 v5.1.1. Checked directly against what's actually installed via `envs/qiime2-amplicon-2026.1.yaml` (the only QIIME2 environment wired into the Snakefile): the `rescript` plugin there is version `2026.1.0`, and its `get-pr2-data` action only accepts `--p-version 5.1.0` or `5.0.0` - `5.1.1` is not an available choice and would error. The commands above use `5.1.0` and QIIME2 `2026.1.0` since that's what's verifiably installed and wired into this repo; if `classifier.qza` was genuinely built with 2026.4.0 on PR2 5.1.1, either that footnote is describing a different environment than the one this repo currently ships, or it needs correcting - worth resolving before publishing, since **QIIME2 classifier artifacts need to match the QIIME2 version used to run them** (also already noted in that footnote).
 
 ### 2. Configuring `config.yaml`
@@ -167,8 +169,6 @@ Here are the remaining values:
 - **`gappa_consensus_thresh`** - In `gappa examine assign`, which uses the phylogenetic placement results and a given taxonomic reference file to taxonomically assign query ASVs. This parameter controls the minimum proportion of descendant nodes required to agree on a taxonomic label when resolving inner nodes on the reference tree. 
 - **`edpl_threshold`** - The maximum Expected Distance between Placement Locations (EDPL) allowed for a placement to be counted as high-confidence; this is what separates the raw placement output from the `filtered_*_LWR_EDPL.tsv` files that feed into the next placement (and, for the clade-level trees, into the final R figures). We set this value to 0.05.
 - **`p_min_length`, `filter_minquality`, `primer_err`** - default QC parameters (minimum read length, minimum quality score, and primer-matching error tolerance) applied across all projects unless overridden per-project.
-
-Every one of these has a default already filled in for our anaerobic-ciliate use case - if you're adapting this pipeline to a different TOI, these are the values you'll most likely need to change.
 
 ### 3. Configuring `cluster.yaml` (HPC only)
 
@@ -201,11 +201,12 @@ Either way, the first run will take a while, since every conda environment needs
 
 The first step is to find SRA BioProjects containing paired-end 18S rDNA reads which were sequenced with Illumina and which contain samples that you're interested in. They could be from a habitat type you're interested in or suspect contains TOI, for example. Since authors are mostly required to deposit their raw sequencing data into SRA or some other repository and report accession IDs, a literature review is a good place to start to collect SRA accession IDs and associated project information (we recommend you record the forward and reverse primer sequences used to amplify, the expected amplicon length, and the read length; and optionally, any other information you want to have associated with the project, like habitat type, location, whether they amplified DNA or cDNA, whether they used one primer pair or a nested primer strategy, etc.). The website [sra-explorer.info](http://sraexplorer.com) is also helpful to search NCBI SRA for samples from given habitat types. If you know of another tool that makes searching SRA easier, email us and let us know and we can add it here!
 
-If you want to include studies that are not on SRA, that is totally fine – you will just need to download the files yourself, deposit them in a folder with
+If you want to include studies that are not on SRA, that is totally fine – you will just need to download the files yourself, deposit them in a folder with 
 
-<!-- NOTE: the paragraph above ends mid-sentence in the source draft - left as-is, flagging for you to finish -->
 
 ### How do I find or generate appropriate reference trees for phylogenetic placement? 
+
+This Snakemake pipeline uses a multi-level phylogenetic placement scheme, as described in (5) and used in e.g. (3,6).
 
 ### Known limitations
 
@@ -223,6 +224,8 @@ These are open items, not yet resolved, tracked here so they're visible rather t
 1. Hu SK. shu251/tagseq-qiime2-snakemake. 2026. Available from: github.com/shu251/tagseq-qiime2-snakemake
 2. Ewers I, Rajter L, Czech L, Mahé F, Stamatakis A, Dunthorn M. Interpreting phylogenetic placements for taxonomic assignment of environmental DNA. J Eukaryot Microbiol. 2023;70(5):e12990.
 3. Schrecengost A, Frates E, Al-Haj A, Fulweiler RW, Beinart R. A meta-analysis of environmental sequencing data reveals the global distribution and hidden diversity of marine anaerobic ciliates. bioRxiv. 2025;2025–12.
-4. Mahé F, de Vargas C, Bass D, Czech L, Stamatakis A, Lara E, et al. Parasites dominate hyperdiverse soil protist communities in Neotropical rainforests. Nat Ecol Evol. 2017 Apr;1(4):0091.
-5. Rajter Ľ, Dunthorn M. Ciliate SSU-rDNA reference alignments and trees for phylogenetic placements of metabarcoding data. Metabarcoding Metagenomics. 2021 Aug 30;5:e69602.
-6. Czech L, Barbera P, Mahe F. lzech/gappa. 2025. Available from: github.com/lczech/gappa
+4. Czech L, Stamatakis A, Dunthorn M, Barbera P. Metagenomic Analysis Using Phylogenetic Placement—A Review of the First Decade. Front Bioinforma. 2022
+5. Czech L, Barbera P, Stamatakis A. Methods for automatic reference trees and multilevel phylogenetic placement. Bioinformatics. 2019 Apr 1;35(7):1151–8.
+6. Mahé F, de Vargas C, Bass D, Czech L, Stamatakis A, Lara E, et al. Parasites dominate hyperdiverse soil protist communities in Neotropical rainforests. Nat Ecol Evol. 2017 Apr;1(4):0091.
+7. Rajter Ľ, Dunthorn M. Ciliate SSU-rDNA reference alignments and trees for phylogenetic placements of metabarcoding data. Metabarcoding Metagenomics. 2021 Aug 30;5:e69602.
+8. Czech L, Barbera P, Mahe F. lzech/gappa. 2025. Available from: github.com/lczech/gappa
