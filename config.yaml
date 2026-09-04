@@ -1,0 +1,132 @@
+# Configuration for batch processing multiple SRA projects
+# Each project can have different primers, merge parameters, and trim lengths
+
+# List of projects to process
+projects:
+  - PRJEB36098
+  - PRJNA546472
+  - PRJNA593930
+
+# Project-specific settings
+# Use this when different projects have different primers, trim lengths, etc.
+project_settings:
+  
+  # Example Project 1
+  PRJEB36098:
+    SRAid: PRJEB36098
+    primerF: CYGCGGTAATTCCAGCTC
+    primerR: AYGGTATCTRATCRTCTTYG
+    max_diffs_merge: 40
+    minovlen_merge: 40
+    p_trim_length: 325
+    
+  # Example Project 2
+  PRJNA546472:
+    SRAid: PRJNA546472
+    primerF: CCAGCASCYGCGGTAATTCC
+    primerR: ACTTTCGTTCTTGATYR
+    max_diffs_merge: 40
+    minovlen_merge: 50
+    p_trim_length: 325
+    
+  # Example Project 3: Using V9 primers
+  PRJNA593930:
+    SRAid: PRJNA593930
+    primerF: CGGTAAYTCCAGCTCYV
+    primerR: TCYDAGAATTYCACCTCT
+    max_diffs_merge: 40
+    minovlen_merge: 50
+    p_trim_length: 300
+
+# Per-project habitat columns for figure generation, derived (not manually
+# patched, since source metadata quality/coverage varies per project and per
+# dataset):
+#   env_2 = habitat type (map point color, barplot sample grouping),
+#     from env_biome, converted via reference/ENVO_IDs.csv (ENVO codes
+#     resolved to labels; plain text kept; unmapped/empty -> NA)
+#   shallow_deep = depth category (map point shape),
+#     from depth_m (<= 200 m shallow, > 200 m deep, missing -> NA)
+# results/_figures/metadata_gaps.txt (written by prepare_phyloseq_objects)
+# reports exactly which project/column combinations are incomplete after
+# derivation, so gaps can be identified and addressed upstream in the source
+# metadata rather than patched here.
+# NOTE: some public SRA submissions have inconsistent per-sample metadata
+# (e.g. a whole project's env_biome using the same handful of ENVO codes, or
+# fields simply left blank) - check metadata_gaps.txt against the underlying
+# SRA records if a project's habitat/depth figures look wrong or incomplete.
+
+# Shared settings across all projects
+raw_data: "data/raw/"
+output: "results/"
+visualization: "results/visualizations/"
+taxonomy_fasta: "reference/reference_database.qza"
+trained_ref_database: "reference/classifier.qza"
+REFFASTA: "reference/reference_database.qza"
+EUK_TREE: "reference/euk_tree.tree"
+MSA_FASTA_EUK: "reference/eukaryotic_reference_tree.fasta"
+MSA_PHYLIP_EUK: "reference/eukaryotic_reference_tree.phy"
+CLADES_EUKS: "reference/eukaryotic_reference_tax.txt"
+
+# Eukaryote reference files
+EUK_TREE: "reference/euk_tree.tree"
+MSA_FASTA_EUK: "reference/eukaryotic_reference_tree.fasta"
+MSA_PHYLIP_EUK: "reference/eukaryotic_reference_tree.phy"
+CLADES_EUKS: "reference/eukaryotic_reference_tax.txt"
+
+# Ciliate reference files
+CIL_TREE: "reference/ciliate_tree.tree"
+MSA_FASTA_CIL: "reference/ciliate_reference_tree.fasta"
+MSA_PHYLIP_CIL: "reference/ciliate_reference_tree.phy"
+CLADES_CIL: "reference/ciliate_reference_tax.txt"
+
+# APM reference files
+APM_TREE: "reference/apm_tree.tree"
+MSA_FASTA_APM: "reference/apm_reference_tree.fasta"
+MSA_PHYLIP_APM: "reference/apm_reference_tree.phy"
+CLADES_APM: "reference/apm_reference_tax.txt"
+
+# Plagiopylea reference files
+PLAGIO_TREE: "reference/plagio_tree.tree"
+MSA_FASTA_PLAGIO: "reference/plagio_reference_tree.fasta"
+MSA_PHYLIP_PLAGIO: "reference/plagio_reference_tree.phy"
+CLADES_PLAGIO: "reference/plagio_reference_tax.txt"
+
+# Scuti reference files
+SCUTI_TREE: "reference/scuti_tree.tree"
+MSA_FASTA_SCUTI: "reference/scuti_reference_tree.fasta"
+MSA_PHYLIP_SCUTI: "reference/scuti_reference_tree.phy"
+CLADES_SCUTI: "reference/scuti_reference_tax.txt"
+
+# NOTE: placement rules no longer stage work in a separate scratch directory
+# (previously scratch_dir/cil_scratch_dir/apm_scratch_dir/plagio_scratch_dir/
+# scuti_scratch_dir) - they now run directly in their own results/_*_placement/
+# output directory. If you're on an HPC and want compute-node-local scratch
+# for I/O performance, point `output:` above at a scratch filesystem and run
+# the whole pipeline from there instead.
+
+# Phylogenetic placement settings
+epa_filter_acc_lwr: 0.99   # minimum accumulated LWR to retain placements
+epa_filter_max: 100         # maximum number of placements per query sequence
+gappa_mass_norm: "absolute" # mass normalisation for heat-tree (absolute or relative)
+gappa_consensus_thresh: 0.7 # consensus threshold for taxonomic assignment
+edpl_threshold: 0.05        # maximum EDPL for high-confidence placements
+
+# QIIME taxonomy --p-include filters (rules filter_table_taxa/filter_seqs_taxa
+# and filter_table_unassigned/filter_seqs_unassigned)
+p_include_taxa: "Ciliophora"
+p_include_unassigned: "Unassigned,Eukaryota,Eukaryota;TSAR,Eukaryota;TSAR;Alveolata"
+
+# Taxopath search terms for placement-result filtering (filter_by_taxopath.py)
+# rule filter_ciliophora: selects Ciliophora hits out of the eukaryotic tree's
+# placements, feeding the taxa (formerly "ciliate") placement tier
+search_term_taxa: "Ciliophora"
+# rules filter_APM / filter_Plagio / filter_Scuti: select clade candidates out
+# of the taxa tree's placements, feeding the Clade1/Clade2/Clade3 trees
+search_term_clade1: "Armophorea"
+search_term_clade2: "Plagiopylea"
+search_term_clade3: "Cyclidiidae"
+
+# Default settings (can be overridden per project)
+p_min_length: 10
+filter_minquality: 20
+primer_err: 0.1

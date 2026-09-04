@@ -1,0 +1,260 @@
+# EukSIFT
+
+**Eu**karyotic **S**equence **I**dentification, **F**iltering, and **T**argeted phylogenetic placement of 18S rDNA sequencing reads from NCBI SRA
+
+Written by Anna Schrecengost and Jaliyah Harrison, with help from this QIIME2 Snakemake tutorial from Sarah Hu [(1)](https://www.zotero.org/google-docs/?sUyR2M) and this paper from Isabelle Ewers et al. [(2)](https://www.zotero.org/google-docs/?RMLTd3).
+
+Contact us via email with questions:
+aschrecengost@uri.edu
+jaliyahdharrison@gmail.com
+
+![Figure 1: Pipeline overview](images/SnakemakePipeline.drawio.svg)
+
+**Figure 1.** Pipeline overview. Major snakemake steps are summarized in green and detailed in the solid boxes. Arrows represent outputs which become inputs for the next steps in the pipeline. White dotted-line boxes indicate user-supplied parameters or files, and green dotted-line boxes indicate end-point outputs.
+
+## Description
+
+This Snakemake pipeline is designed as a tool to interrogate publicly available 18S rRNA metabarcoding datasets for sequences from any given eukaryotic taxon of interest (TOI). It takes a list of SRA accession IDs as input, as well as several user-defined parameters and input files detailed below, and outputs taxonomically-assigned sequences and count tables from your TOI, along with sample metadata and a couple of basic figures generated in R which illustrate the geographic locations and habitat types of samples containing TOI and the relative abundances of TOI across habitat types. As it imports all of the relevant files into R/phyloseq, it is meant as a starting point for your analysis. Example analyses conducted using this pipeline can be seen in this preprint [(3)](https://www.zotero.org/google-docs/?4ceEXV), which conducted a meta-analysis of global marine oxygen-depleted sequencing datasets to explore the diversity and distribution of marine anaerobic ciliates.
+
+This pipeline is designed to process Illumina short reads which were amplified from any region of the 18S rRNA gene. This works because we use a phylogenetic placement method, which places short reads onto a given full-length reference phylogenetic tree. In this way, ASVs from different primer sets or even different regions of the 18S rRNA gene can be analyzed together. As well as being a good tool for large scale meta-analyses, this method is particularly useful for groups that are not well-represented in reference databases. To learn more check out the following references: [(2,4,5)](https://www.zotero.org/google-docs/?broken=Y86Nym)
+
+## Setup
+
+It can be run either locally on your computer or on a high-performance computing cluster (HPC). If possible, we recommend the latter, as some of the scripts are memory-intensive. If running on an HPC, you will need to submit it as a batch job (see `submit.sh`) and fill in the cluster configuration file (`cluster.yaml`), which details the computational resources requested for each step in the pipeline. The only requirements are snakemake, conda, and PaPaRa installations on the machine where it is running from.
+
+If you are running locally on your computer, you will need to have [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html), [snakemake](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html), and [PaPaRa](https://cme.h-its.org/exelixis/web/software/papara/index.html) installed. You need to add the PaPaRa executable to your PATH:
+
+```
+mkdir -p "$HOME/bin"
+cp "/full/path/to/papara_nt-2.5/papara" "$HOME/bin/papara"
+chmod +x "$HOME/bin/papara"
+echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.zshrc"
+source "$HOME/.zshrc"
+```
+
+> **Current limitation:** every `papara_*` rule in the Snakefile currently calls `module load papara_nt/2.5` before running `papara`, which only works on HPC systems using Environment Modules/Lmod (this is how we run it on Unity). If you've installed PaPaRa locally and added it to your `PATH` as described above, that `module load` line will still fail on its own even though `papara` is available. This is the same gap called out below in [Known limitations](#known-limitations) - until it's resolved, running locally currently requires removing/commenting out the five `module load papara_nt/2.5` lines from the Snakefile yourself.
+
+Then run the Snakefile with:
+
+```
+snakemake -s Snakefile --cores all --use-conda --rerun-incomplete
+```
+
+Every rule that needs a specific software environment declares its own `conda:` environment file (see `envs/`), so `--use-conda` builds each one automatically the first time it's needed - you do not need to create these environments by hand.
+
+### Folder set-up:
+
+```
+Snakemake/
+├── reference/
+│   ├── reference_database.fasta*
+│   ├── reference_database.qza*
+│   ├── classifier.qza*
+│   ├── ENVO_IDs.csv
+│   ├── ENVO.csv
+│   ├── euk_tree.tree**
+│   ├── eukaryotic_reference_tax.txt**
+│   ├── eukaryotic_reference_tree.fasta**
+│   ├── eukaryotic_reference_tree.phy**
+│   └── ***
+├── scripts/
+│   ├── clean_metadata.py
+│   ├── extract_fasta.py
+│   ├── filter_by_taxopath.py
+│   ├── filter_placements.py
+│   ├── generate_figures.R
+│   ├── make_empty_qza.py
+│   └── prepare_phyloseq_objects.R
+└── envs/
+    ├── parallelfastqdump.yaml
+    ├── phylo_placement.yaml
+    ├── pysradb.yaml
+    ├── qiime2-amplicon-2026.1.yaml
+    └── r_figures.yaml
+```
+
+\* We provide a taxonomic classifier trained with QIIME2 v2026.4.0 on [PR2](https://pr2-database.org/) v5.1.1; [instructions to train your own classifier are here](#generating-the-large-reference-files-yourself). The QIIME2 version that you are running must be the same as the one you use to train the classifier. Similarly, the `reference_database.fasta` and `reference_database.qza` are from PR2 v5.1.1 and obtained with `qiime rescript get-pr2-data`.
+
+\*\* Eukaryotic reference trees and files were obtained from [(4)](https://www.zotero.org/google-docs/?ilQoQ1).
+
+\*\*\* You must provide phylogenetic reference trees for your TOI. If you are surveying a taxonomic group within Ciliophora, we provide the relevant files: `ciliate_reference_tax.txt`, `ciliate_reference_tree.fasta`, `ciliate_reference_tree.phy`, which were obtained and prepared from [(5)](https://www.zotero.org/google-docs/?ngbr9x). See the section "How do I find or generate appropriate reference trees for phylogenetic placement?" below.
+
+<!-- NOTE: the three lines below appear to be an earlier/stale draft of the footnote above (same content, "XX" placeholders instead of real version numbers, and an unfinished "We also provide" sentence) - left as-is rather than removed, since you asked to be consulted before anything gets deleted. Worth checking whether this should be reconciled with or replaced by the footnote above. -->
+We provide a classifier trained on PR2 version XX with QIIME2 version XX; [instructions to train your own classifier here](#generating-the-large-reference-files-yourself). The QIIME2 version that you are running must be the same as the one used to train the classifier
+Similarly reference_database.fasta and .qza are from PR2; provided here but [instructions on how to generate here](#generating-the-large-reference-files-yourself)
+We also provide
+
+## Getting started: a technical walkthrough
+
+This section walks through actually getting a run going, end to end, on top of the summary above.
+
+### 1. What gets installed automatically, and what doesn't
+
+Everything that runs *inside* a Snakemake rule - QIIME2, `epa-ng`, `gappa`, `raxml-ng`, R and all of its packages (`phyloseq`, `sf`, `rnaturalearth`, etc.) - is provisioned automatically by `snakemake --use-conda` from the `.yaml` files in `envs/`. You never install these yourself; the first time a rule needs one, Snakemake builds it from the matching env file and reuses it on every subsequent run.
+
+The things that are *not* handled this way, and that you are responsible for having on the machine that launches the pipeline:
+- **Snakemake** itself and **conda** (see [Setup](#setup) above for install links).
+- **PaPaRa**, for the reasons noted in the callout above - PaPaRa isn't packaged on conda-forge/bioconda, so it has to be available as a `papara` command (locally) or an HPC module (on a cluster) before you run the pipeline.
+- **`reference/reference_database.fasta`, `reference/reference_database.qza`, and `reference/classifier.qza`** - these three files are excluded from the git repo (see `.gitignore`) because they're too large to distribute via git (303MB/49MB/209MB respectively - the first two alone exceed GitHub's 100MB per-file limit). See the next section for how to generate them yourself; it only needs to be done once.
+
+If you're on an HPC that uses Environment Modules/Lmod (as we are, on Unity), you'll also typically need to load `conda` itself via a module before the `snakemake`/`conda` commands are available - check with your cluster's documentation. `submit.sh` has commented-out `module load` lines showing what we use on Unity as a starting point.
+
+#### Generating the large reference files yourself
+
+These are built from [PR2](https://pr2-database.org/) via QIIME2's `rescript` plugin, using the exact same `envs/qiime2-amplicon-2026.1.yaml` environment the rest of the pipeline uses (important - see the note on version-matching below). Build and activate that environment once, standalone:
+
+```
+conda env create -f envs/qiime2-amplicon-2026.1.yaml -n qiime2-amplicon-2026.1
+conda activate qiime2-amplicon-2026.1
+```
+
+Then, from the repository root:
+
+```
+# 1. Download and format the PR2 reference sequences + taxonomy
+qiime rescript get-pr2-data \
+    --p-version 5.1.0 \
+    --o-pr2-sequences reference/reference_database.qza \
+    --o-pr2-taxonomy reference/pr2_taxonomy.qza
+
+# 2. Export a plain-FASTA copy alongside the .qza (some tooling expects the raw file)
+qiime tools export \
+    --input-path reference/reference_database.qza \
+    --output-path reference/_export_tmp
+mv reference/_export_tmp/dna-sequences.fasta reference/reference_database.fasta
+rmdir reference/_export_tmp
+
+# 3. Train the naive Bayes taxonomic classifier used by `assign_tax`
+qiime feature-classifier fit-classifier-naive-bayes \
+    --i-reference-reads reference/reference_database.qza \
+    --i-reference-taxonomy reference/pr2_taxonomy.qza \
+    --o-classifier reference/classifier.qza
+```
+
+`get-pr2-data` requires a stable internet connection (it downloads directly from PR2) and step 3 is the most memory/time-intensive of the three - expect it to take a while and to need a reasonable amount of RAM, so run it on a compute node/allocation rather than a login node if you're on an HPC.
+
+> **Version discrepancy, flagged rather than silently resolved:** the folder-set-up footnote above states the classifier was trained with QIIME2 v2026.4.0 on PR2 v5.1.1. Checked directly against what's actually installed via `envs/qiime2-amplicon-2026.1.yaml` (the only QIIME2 environment wired into the Snakefile): the `rescript` plugin there is version `2026.1.0`, and its `get-pr2-data` action only accepts `--p-version 5.1.0` or `5.0.0` - `5.1.1` is not an available choice and would error. The commands above use `5.1.0` and QIIME2 `2026.1.0` since that's what's verifiably installed and wired into this repo; if `classifier.qza` was genuinely built with 2026.4.0 on PR2 5.1.1, either that footnote is describing a different environment than the one this repo currently ships, or it needs correcting - worth resolving before publishing, since **QIIME2 classifier artifacts need to match the QIIME2 version used to run them** (also already noted in that footnote).
+
+### 2. Configuring `config.yaml`
+
+`config.yaml` is where you describe your input datasets and every tunable parameter. The `projects` / `project_settings` fields are already covered above under ["I have my SRA accession IDs, now what?"](#i-have-my-sra-accession-ids-now-what). Beyond that section, a few more settings you'll want to know about that aren't described there yet:
+
+- **`taxonomy_fasta`, `trained_ref_database`, `REFFASTA`** - paths to the PR2 reference FASTA/classifier described in the Folder set-up footnotes.
+- **`EUK_TREE`, `MSA_FASTA_EUK`, `MSA_PHYLIP_EUK`, `CLADES_EUKS`** and the equivalent `CIL_*`, `APM_*`, `PLAGIO_*`, `SCUTI_*` blocks - the tree/alignment/taxonomy files for each phylogenetic placement tier (see "How do I find or generate appropriate reference trees for phylogenetic placement?" below for how to build your own set for a different TOI).
+- **`epa_filter_acc_lwr`, `epa_filter_max`** - EPA-NG's placement-filtering thresholds (minimum accumulated likelihood weight ratio to keep a placement, and the max number of placements retained per query sequence).
+- **`gappa_mass_norm`, `gappa_consensus_thresh`** - passed straight through to `gappa examine heat-tree`/`gappa examine assign`.
+- **`edpl_threshold`** - the maximum Expected Distance between Placement Locations (EDPL) allowed for a placement to be counted as high-confidence; this is what separates the raw placement output from the `filtered_*_LWR_EDPL.tsv` files that feed into the next tier (and, for the clade-level trees, into the final R figures).
+- **`p_include_taxa`, `p_include_unassigned`** - the QIIME2 `qiime taxa filter-table`/`filter-seqs` `--p-include` values used to split each project's ASVs into the "taxa of interest" branch vs. the "everything else, still worth phylogenetically placing" branch. Defaults to `Ciliophora` and `Unassigned,Eukaryota,Eukaryota;TSAR,Eukaryota;TSAR;Alveolata` respectively - **if you are targeting a TOI outside Ciliophora, you will need to change `p_include_taxa`** (and its downstream reference trees) to match.
+- **`search_term_taxa`, `search_term_clade1`, `search_term_clade2`, `search_term_clade3`** - the taxopath substrings used to sort placements from the broader "taxa" tree into up to three narrower clade-specific trees (in our anaerobic-ciliate use case: Armophorea, Plagiopylea, and the Cyclidiidae/Scuticociliatia clade). If your TOI only needs one placement tier (no further clade splitting), these can be left as-is; the clade-specific rules simply won't find any matching sequences to place.
+- **`p_min_length`, `filter_minquality`, `primer_err`** - default QC parameters (minimum read length, minimum quality score, and primer-matching error tolerance) applied across all projects unless overridden per-project.
+
+Every one of these has a default already filled in for our anaerobic-ciliate use case - if you're adapting this pipeline to a different TOI, these are the values you'll most likely need to change.
+
+### 3. Configuring `cluster.yaml` (HPC only)
+
+If you're running on an HPC via `submit.sh`, `cluster.yaml` tells Snakemake how much to request from your scheduler (Slurm, in our case) for each rule: `partition`, `time`, `mem`, `ntasks`, `nodes`. There's a `__default__` block used for any rule without its own entry, plus dedicated entries for the compute-heavy steps (deblur, taxonomy classification, and every phylogenetic placement rule) that need more than the default. If you add new rules, or find the defaults don't fit your cluster, this is the file to edit - the `submit.sh` `--cluster` command line is already wired to read from it.
+
+### 4. Running it
+
+**On an HPC:** review/edit `submit.sh` (partition names, time limits, and any `module load` lines specific to your cluster), then submit it as a batch job:
+```
+sbatch submit.sh
+```
+
+**Locally:** as shown in [Setup](#setup):
+```
+snakemake -s Snakefile --cores all --use-conda --rerun-incomplete
+```
+
+Either way, the first run will take a while, since every conda environment needs to be built from scratch and (for the SRA-derived projects) raw reads need to be downloaded. Subsequent runs reuse the built environments and any already-completed outputs.
+
+### 5. Checking on a run / what to expect
+
+- **`results/`** fills in per-project (`results/<BioProject accession>/...`), then with cross-project merged/exported files under `results/_merged/`, then with the phylogenetic placement tiers under `results/_placement/` (the broad eukaryotic tree), `results/_cil_placement/` (the taxa-of-interest tree), and `results/_apm_placement/`, `results/_plagio_placement/`, `results/_scuti_placement/` (the clade-specific trees, if applicable to your TOI).
+- **`results/visualizations/`** holds `.qzv` files you can drag into [view.qiime2.org](https://view.qiime2.org) to sanity-check demultiplexing, primer removal, merging, and quality filtering for each project.
+- **`results/_figures/`** holds the final R outputs: the phyloseq object (`ps.rds`), the taxa barplot and sample map (as both PDF and PNG), the cleaned/combined metadata and taxonomy tables, and **`metadata_gaps.txt`** - a report of exactly which metadata columns are incomplete for which projects, generated automatically every run (see [Known limitations](#known-limitations) for why we report gaps rather than trying to auto-fill them).
+- **On an HPC**, per-rule logs land in `slurm-logs/<rule>.<jobid>.log`; the top-level `slurm-<jobid>.out` file is the master Snakemake driver log showing overall progress through the DAG.
+- If a run stops partway through, both `sbatch submit.sh` and the local `snakemake` command above are safe to re-run - Snakemake picks up from whatever's already been produced rather than starting over.
+
+### Known limitations
+
+These are open items, not yet resolved, tracked here so they're visible rather than silently missing:
+
+- **PaPaRa loading isn't configurable** - every `papara_*` rule hardcodes `module load papara_nt/2.5`, which assumes an HPC with Environment Modules and a module by that exact name. There's currently no config switch for "just use `papara` from PATH" on a local machine.
+- **No shortcut to stop before phylogenetic placement** - because of how Snakemake resolves `rule all`'s dependencies, there isn't currently a simple way to run only through the QIIME2/denoising steps without commenting out large chunks of `rule all`. See the proposed `rule pre_placement` in the issues list below.
+- **QIIME2 environment files aren't split by OS** - only one `envs/qiime2-amplicon-2026.1.yaml` (built for Linux) is wired into the Snakefile.
+
+## Usage
+
+The major steps of the pipeline are:
+1. Download metadata from NCBI SRA, format it, and merge across studies
+2. Download raw .fastq files from SRA and import into QIIME2
+3. Merge and denoise reads with QIIME2, vsearch, and deblur, filter and merge results across studies
+4. Phylogenetically place ASVs onto reference trees (using a stepwise approach described below)
+5. Import data into R and phyloseq and generate a simple taxonomic barplot grouped by habitat type and a map showing samples which recovered sequences from TOI
+
+### What kind of sequencing data can I include as input?
+
+The first step is to find SRA BioProjects containing paired-end 18S rDNA reads which were sequenced with Illumina and which contain samples that you're interested in. They could be from a habitat type you're interested in or suspect contains TOI, for example. Since authors are mostly required to deposit their raw sequencing data into SRA or some other repository and report accession IDs, a literature review is a good place to start to collect SRA accession IDs and associated project information (we recommend you record the forward and reverse primer sequences used to amplify, the expected amplicon length, and the read length; and optionally, any other information you want to have associated with the project, like habitat type, location, whether they amplified DNA or cDNA, whether they used one primer pair or a nested primer strategy, etc.). The website [sra-explorer.info](http://sraexplorer.com) is also helpful to search NCBI SRA for samples from given habitat types. If you know of another tool that makes searching SRA easier, email us and let us know and we can add it here!
+
+If you want to include studies that are not on SRA, that is totally fine – you will just need to download the files yourself, deposit them in a folder with
+
+<!-- NOTE: the paragraph above ends mid-sentence in the source draft - left as-is, flagging for you to finish -->
+
+### I have my SRA accession IDs, now what?
+
+To run the Snakemake pipeline, you need to fill in the config file with the relevant information. In config.yml, under the "Projects" heading, list  the names of the datasets you will be using. Then, fill in all the details for each project:
+
+* SRAid: BioProject accession ID
+* primerF: Forward primer sequence used to amplify, 5'→3'
+* primerR: Reverse primer sequence used to amplify, 5'→3'
+* max_diffs_merge and minovlen_merge are parameters that you can change for the vsearch merge-pairs step, where the paired end reads are merged together. the values given in the example file are likely fine, and these parameters are there to play with in case you have issues with reads not merging.
+* p_trim_length is the length that you want to trim the reads to for deblur. any reads shorter than this will be dropped. it's not necessary to include but it can help you make sure your reads are all the same length if you are comparing multiple studies from the same primer set
+  > If you omit `p_trim_length` for a project (and there's no pipeline-wide `p_trim_length` in the shared settings either), deblur still trims to a specific length - it defaults to **325bp**, it does not skip trimming. `--p-trim-length` is a required QIIME2 argument, so some value is always used; "optional" here means "optional to write down," not "optional to happen." The same default-if-unset pattern gives `max_diffs_merge`/`minovlen_merge` a default of 40, `p_min_length` a default of 10, `primer_err` a default of 0.1, and `filter_minquality` a default of 20 - all silently applied, all worth knowing exist even if you never set them. `primerF`/`primerR` are the one exception: they have no fallback default, so omitting them doesn't error cleanly - it silently passes the literal text `None` into the primer-trimming step, which will fail confusingly rather than tell you what's missing. Always set these two explicitly.
+  >
+  > If you genuinely don't want trimming applied at all (rather than trimmed to the 325bp default), set `p_trim_length: -1` explicitly for that project. QIIME2's deblur plugin treats `-1` as its documented "disable trimming" value - confirmed directly from `qiime deblur denoise-other --help`, which marks the argument `[required]` but describes `-1` as disabling it. Leaving `p_trim_length` out of the config entirely does not do this - it still trims, to 325bp - so `-1` has to be set on purpose if that's what you want.
+
+Then there is a shared settings section, which is where you will detail the locations of your output folders and input reference files.
+
+* raw_data: path where the fastq files downloaded from NCBI will be located
+* output: path where your results will populate
+* visualization: path where visualizations will populate (.qzv files from QIIME2 which allow you to visualize the reads and debug steps in the pipeline)
+
+Each phylogenetic placement step writes its results directly into its own subdirectory under `output` (e.g. `results/_placement/`, `results/_cil_placement/`, `results/_apm_placement/`, etc. - see [Checking on a run / what to expect](#5-checking-on-a-run--what-to-expect) above for the full list). There is no separate `scratch_dir` setting to configure - an earlier version of the pipeline staged placement work in a standalone scratch directory before copying results back, but that indirection has since been removed in favor of writing straight to the final output location.
+
+Files you provide:
+
+* trained_ref_database: QIIME2 classifier to use for taxonomic classification
+* For each phylogenetic placement that you do, you need to provide a .tree file, a .fasta file of the alignment used to generate the reference tree, a .phylip file of the alignment used to generate the reference tree, and a .txt file that describes the taxonomy of each tip in the tree (formatted like Phylum;Class;Order;Family;Genus;Species or whichever levels you use)
+
+See [Configuring config.yaml](#2-configuring-configyaml) above for the remaining settings (placement thresholds, taxonomy filters, etc.) not covered here.
+
+### How do I find or generate appropriate reference trees for phylogenetic placement?
+
+<!-- section not yet written in the source draft - left as a placeholder -->
+
+## ISSUES WITH THE SNAKEFILE:
+
+* There isn't a simple way to run up until the phylogenetic placement steps without just deleting chunks of code, because of the way the dependencies work
+   * One way to fix this is by adding this right after rule all:
+   * rule pre_placement: input: # Per-project processing and visualizations expand(VISUALIZATION + "{project}/{project}-PE-demux.qzv", project=PROJECTS), expand(VISUALIZATION + "{project}/{project}-PE-demux-noprimer.qzv", project=PROJECTS), expand(VISUALIZATION + "{project}/{project}-PE-demux-noprimer-merged.qzv", project=PROJECTS), expand(VISUALIZATION + "{project}/{project}-PE-demux-noprimer-merged-filtered.qzv", project=PROJECTS), expand(VISUALIZATION + "{project}/{project}-deblur-stats.qzv", project=PROJECTS), # Merged datasets MERGED + "merged-table.qza", MERGED + "merged-seqs.qza", MERGED + "merged-taxa.qza", # Ciliophora exports MERGED + "export/table/merged-ciliophora-table.biom", MERGED + "export/table/merged-ciliophora-table.tsv", MERGED + "export/merged-ciliophora-seqs.fasta", # Unassigned exports—the final input before placement MERGED + "export/table/merged-unassigned-table.biom", MERGED + "export/table/merged-unassigned-table.tsv", MERGED + "export/merged-unassigned-seqs.fasta", # Taxonomy and metadata MERGED + "export/merged-taxonomy.tsv", "documents/merged/merged_metadata.csv", FIGURES + "metadata_sample_data.rds"
+
+* Change p_trim_length to an optional parameter
+  <!-- NOTE: this already has a default (325) via get_setting() in the Snakefile, so omitting it from a project's settings should already work - worth double-checking whether this item is resolved. -->
+* We need to add something in the config file and Snakefile to address differing installations and ways to load papara
+   * Should be able to module load someversion if on HPC and also just use papara as a command if on computer
+* Which version of qiime2 was used?
+   * Also we need to include all the .yaml files for qiime2 and then let the user pick the relevant one based on their OS
+      * macOS:
+      * Ubuntu/Linux (including WSL):
+      * Windows:
+
+<!-- NOTE: currently only envs/qiime2-amplicon-2026.1.yaml is wired into the Snakefile (conda: directive in every QIIME2 rule) - that's the version actually in use. An older, unused envs/qiime2-amplicon-2023.9-py38-linux-conda.yml that nothing referenced has been removed. -->
+
+## References:
+
+1. Hu SK. shu251/tagseq-qiime2-snakemake [Shell] [Internet]. 2026 [cited 2026 Sep 3]. Available from: https://github.com/shu251/tagseq-qiime2-snakemake
+2. Ewers I, Rajter L, Czech L, Mahé F, Stamatakis A, Dunthorn M. Interpreting phylogenetic placements for taxonomic assignment of environmental DNA. J Eukaryot Microbiol. 2023;70(5):e12990. doi:10.1111/jeu.12990
+3. Schrecengost A, Frates E, Al-Haj A, Fulweiler RW, Beinart R. A meta-analysis of environmental sequencing data reveals the global distribution and hidden diversity of marine anaerobic ciliates. bioRxiv. 2025;2025–12.
+4. Mahé F, de Vargas C, Bass D, Czech L, Stamatakis A, Lara E, et al. Parasites dominate hyperdiverse soil protist communities in Neotropical rainforests. Nat Ecol Evol. 2017 Apr;1(4):0091. doi:10.1038/s41559-017-0091
+5. Rajter Ľ, Dunthorn M. Ciliate SSU-rDNA reference alignments and trees for phylogenetic placements of metabarcoding data. Metabarcoding Metagenomics. 2021 Aug 30;5:e69602. doi:10.3897/mbmg.5.69602

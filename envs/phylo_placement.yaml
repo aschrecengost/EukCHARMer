@@ -1,0 +1,14 @@
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - _libgcc_mutex=0.1=conda_forge
+  - _openmp_mutex=4.5=2_gnu
+  - gappa=0.9.0=h077b44d_0
+  - libgcc=15.1.0=h767d61c_2
+  - libgomp=15.1.0=h767d61c_2
+  - libstdcxx=15.1.0=h8f9b012_2
+  - libzlib=1.3.1=hb9d3cd8_2
+  - epa-ng
+  - raxml-ng

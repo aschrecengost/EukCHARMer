@@ -1,0 +1,42 @@
+# Pipeline-generated content (repopulated by running the Snakefile)
+data/
+results/
+documents/raw/
+documents/cleaned/
+documents/merged/
+papara_scratch*/
+.snakemake/
+
+# Logs
+*.log
+*.out
+slurm-*.out
+slurm-logs/
+
+# Large reference files (too big for git; distribute separately - see README)
+reference/reference_database.fasta
+reference/reference_database.qza
+reference/classifier.qza
+
+# Raw sequencing/intermediate data, wherever it ends up
+*.fastq
+*.fastq.gz
+*.fq
+*.fq.gz
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+
+# Python
+__pycache__/
+*.pyc
+
+# This assistant's session directory
+.claude/
