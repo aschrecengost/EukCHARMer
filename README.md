@@ -79,13 +79,13 @@ Snakemake/
 │   ├── pysradb.yaml
 │   ├── qiime2-amplicon-2026.1.yaml
 │   └── r_figures.yaml
-├── **data/
+├── data/
 │   └──raw/
 ├── results/
 └── visualization/
 
 ```
-**Folders in bold will populate while the pipeline is running and their names are specified in the config.yaml file (raw_data, output, and visualization).**
+**data/, results/, and visualization/ folders will populate while the pipeline is running and their names are specified in the config.yaml file (raw_data, output, and visualization).**
 
 \* For `classifier.qza`, we used a taxonomic classifier trained on PR2 [PR2](https://pr2-database.org/) v5.1.1; [instructions to train your own classifier are here](#generating-the-large-reference-files-yourself). The QIIME2 version that you are running must be the same as the one you use to train the classifier. Similarly, the `reference_database.fasta` and `reference_database.qza` are from PR2 v5.1.1 and obtained with `qiime rescript get-pr2-data`. These three files are excluded from the git repo (see `.gitignore`) because they're too large to distribute via git.
 
