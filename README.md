@@ -193,22 +193,6 @@ Either way, the first run will take a while, since every conda environment needs
 - **On an HPC**, per-rule logs land in `slurm-logs/<rule>.<jobid>.log`; the top-level `slurm-<jobid>.out` file is the master Snakemake driver log showing overall progress through the DAG.
 - If a run stops partway through, both `sbatch submit.sh` and the local `snakemake` command above are safe to re-run - Snakemake picks up from whatever's already been produced rather than starting over.
 
-### Known limitations
-
-These are open items, not yet resolved, tracked here so they're visible rather than silently missing:
-
-- **PaPaRa loading isn't configurable** - every `papara_*` rule hardcodes `module load papara_nt/2.5`, which assumes an HPC with Environment Modules and a module by that exact name. There's currently no config switch for "just use `papara` from PATH" on a local machine.
-- **No shortcut to stop before phylogenetic placement** - because of how Snakemake resolves `rule all`'s dependencies, there isn't currently a simple way to run only through the QIIME2/denoising steps without commenting out large chunks of `rule all`. See the proposed `rule pre_placement` in the issues list below.
-- **QIIME2 environment files aren't split by OS** - only one `envs/qiime2-amplicon-2026.1.yaml` (built for Linux) is wired into the Snakefile.
-
-## Usage
-
-The major steps of the pipeline are:
-1. Download metadata from NCBI SRA, format it, and merge across studies
-2. Download raw .fastq files from SRA and import into QIIME2
-3. Merge and denoise reads with QIIME2, vsearch, and deblur, filter and merge results across studies
-4. Phylogenetically place ASVs onto reference trees (using a stepwise approach described below)
-5. Import data into R and phyloseq and generate a simple taxonomic barplot grouped by habitat type and a map showing samples which recovered sequences from TOI
 
 ### What kind of sequencing data can I include as input?
 
@@ -218,53 +202,16 @@ If you want to include studies that are not on SRA, that is totally fine – you
 
 <!-- NOTE: the paragraph above ends mid-sentence in the source draft - left as-is, flagging for you to finish -->
 
-### I have my SRA accession IDs, now what?
+### How do I find or generate appropriate reference trees for phylogenetic placement? 
 
-To run the Snakemake pipeline, you need to fill in the config file with the relevant information. In config.yml, under the "Projects" heading, list  the names of the datasets you will be using. Then, fill in all the details for each project:
+### Known limitations
 
-* SRAid: BioProject accession ID
-* primerF: Forward primer sequence used to amplify, 5'→3'
-* primerR: Reverse primer sequence used to amplify, 5'→3'
-* max_diffs_merge and minovlen_merge are parameters that you can change for the vsearch merge-pairs step, where the paired end reads are merged together. the values given in the example file are likely fine, and these parameters are there to play with in case you have issues with reads not merging.
-* p_trim_length is the length that you want to trim the reads to for deblur. any reads shorter than this will be dropped. it's not necessary to include but it can help you make sure your reads are all the same length if you are comparing multiple studies from the same primer set
-  > If you omit `p_trim_length` for a project (and there's no pipeline-wide `p_trim_length` in the shared settings either), deblur still trims to a specific length - it defaults to **325bp**, it does not skip trimming. `--p-trim-length` is a required QIIME2 argument, so some value is always used; "optional" here means "optional to write down," not "optional to happen." The same default-if-unset pattern gives `max_diffs_merge`/`minovlen_merge` a default of 40, `p_min_length` a default of 10, `primer_err` a default of 0.1, and `filter_minquality` a default of 20 - all silently applied, all worth knowing exist even if you never set them. `primerF`/`primerR` are the one exception: they have no fallback default, so omitting them doesn't error cleanly - it silently passes the literal text `None` into the primer-trimming step, which will fail confusingly rather than tell you what's missing. Always set these two explicitly.
-  >
-  > If you genuinely don't want trimming applied at all (rather than trimmed to the 325bp default), set `p_trim_length: -1` explicitly for that project. QIIME2's deblur plugin treats `-1` as its documented "disable trimming" value - confirmed directly from `qiime deblur denoise-other --help`, which marks the argument `[required]` but describes `-1` as disabling it. Leaving `p_trim_length` out of the config entirely does not do this - it still trims, to 325bp - so `-1` has to be set on purpose if that's what you want.
+These are open items, not yet resolved, tracked here so they're visible rather than silently missing:
 
-Then there is a shared settings section, which is where you will detail the locations of your output folders and input reference files.
+- **PaPaRa loading isn't configurable** - every `papara_*` rule hardcodes `module load papara_nt/2.5`, which assumes an HPC with Environment Modules and a module by that exact name. There's currently no config switch for "just use `papara` from PATH" on a local machine.
+- **No shortcut to stop before phylogenetic placement** - because of how Snakemake resolves `rule all`'s dependencies, there isn't currently a simple way to run only through the QIIME2/denoising steps without commenting out large chunks of `rule all`. See the proposed `rule pre_placement` in the issues list below.
+- **QIIME2 environment files aren't split by OS** - only one `envs/qiime2-amplicon-2026.1.yaml` (built for Linux) is wired into the Snakefile.
 
-* raw_data: path where the fastq files downloaded from NCBI will be located
-* output: path where your results will populate
-* visualization: path where visualizations will populate (.qzv files from QIIME2 which allow you to visualize the reads and debug steps in the pipeline)
-
-Each phylogenetic placement step writes its results directly into its own subdirectory under `output` (e.g. `results/_placement/`, `results/_cil_placement/`, `results/_apm_placement/`, etc. - see [Checking on a run / what to expect](#5-checking-on-a-run--what-to-expect) above for the full list). There is no separate `scratch_dir` setting to configure - an earlier version of the pipeline staged placement work in a standalone scratch directory before copying results back, but that indirection has since been removed in favor of writing straight to the final output location.
-
-Files you provide:
-
-* trained_ref_database: QIIME2 classifier to use for taxonomic classification
-* For each phylogenetic placement that you do, you need to provide a .tree file, a .fasta file of the alignment used to generate the reference tree, a .phylip file of the alignment used to generate the reference tree, and a .txt file that describes the taxonomy of each tip in the tree (formatted like Phylum;Class;Order;Family;Genus;Species or whichever levels you use)
-
-See [Configuring config.yaml](#2-configuring-configyaml) above for the remaining settings (placement thresholds, taxonomy filters, etc.) not covered here.
-
-### How do I find or generate appropriate reference trees for phylogenetic placement?
-
-<!-- section not yet written in the source draft - left as a placeholder -->
-
-## ISSUES WITH THE SNAKEFILE:
-
-* There isn't a simple way to run up until the phylogenetic placement steps without just deleting chunks of code, because of the way the dependencies work
-   * One way to fix this is by adding this right after rule all:
-   * rule pre_placement: input: # Per-project processing and visualizations expand(VISUALIZATION + "{project}/{project}-PE-demux.qzv", project=PROJECTS), expand(VISUALIZATION + "{project}/{project}-PE-demux-noprimer.qzv", project=PROJECTS), expand(VISUALIZATION + "{project}/{project}-PE-demux-noprimer-merged.qzv", project=PROJECTS), expand(VISUALIZATION + "{project}/{project}-PE-demux-noprimer-merged-filtered.qzv", project=PROJECTS), expand(VISUALIZATION + "{project}/{project}-deblur-stats.qzv", project=PROJECTS), # Merged datasets MERGED + "merged-table.qza", MERGED + "merged-seqs.qza", MERGED + "merged-taxa.qza", # Ciliophora exports MERGED + "export/table/merged-ciliophora-table.biom", MERGED + "export/table/merged-ciliophora-table.tsv", MERGED + "export/merged-ciliophora-seqs.fasta", # Unassigned exports—the final input before placement MERGED + "export/table/merged-unassigned-table.biom", MERGED + "export/table/merged-unassigned-table.tsv", MERGED + "export/merged-unassigned-seqs.fasta", # Taxonomy and metadata MERGED + "export/merged-taxonomy.tsv", "documents/merged/merged_metadata.csv", FIGURES + "metadata_sample_data.rds"
-
-* Change p_trim_length to an optional parameter
-  <!-- NOTE: this already has a default (325) via get_setting() in the Snakefile, so omitting it from a project's settings should already work - worth double-checking whether this item is resolved. -->
-* We need to add something in the config file and Snakefile to address differing installations and ways to load papara
-   * Should be able to module load someversion if on HPC and also just use papara as a command if on computer
-* Which version of qiime2 was used?
-   * Also we need to include all the .yaml files for qiime2 and then let the user pick the relevant one based on their OS
-      * macOS:
-      * Ubuntu/Linux (including WSL):
-      * Windows:
 
 <!-- NOTE: currently only envs/qiime2-amplicon-2026.1.yaml is wired into the Snakefile (conda: directive in every QIIME2 rule) - that's the version actually in use. An older, unused envs/qiime2-amplicon-2023.9-py38-linux-conda.yml that nothing referenced has been removed. -->
 
