@@ -151,11 +151,11 @@ qiime feature-classifier fit-classifier-naive-bayes \
 - `SRAid`: BioProject accession ID
 - `primerF`: Forward primer sequence used to amplify DNA, 5' --> 3'
 - `primerR`: Reverse primer sequence used to amplify DNA, 5' --> 3'
-- `max_diffs_merge`:
-- `minovlen_merge`:
-- `p_trim_length`:
+- `max_diffs_merge`: The maximum amount of bp pairwise differences allowed in the overlap region during vsearch's merging step. A good value for this is ~20% of the overlap length. Here the default is set to 40. If most of your reads are not merging, you may want to play around with this parameter and minovlen_merge; a discussion of these parameters can be found [here](https://forum.qiime2.org/t/question-regarding-parameters-used-in-qiime-vsearch-join-pairs/12289):  
+- `minovlen_merge`: Minimum overlap length for vsearch to merge paired-end reads. Most of the problems with vsearch are reported to be with really short overlaps (like 10bp), so setting this value to 50 is essentially the same as setting it to 200. The default in our pipeline is 50; if you expect a shorter overlap then you should lower this value. Expected overlap is calculated with (2*read length) - amplicon length. 
+- `p_trim_length`: This parameter trims all merged reads to this length before denoising with deblur; all reads which are shorter than this are dropped. It is important to include this if your read lengths are hetereogenous as deblur requires all reads are the same length. Also, for example, if you are comparing studies which used the same primer set, it is crucial to set this parameter to the same value for all studies so that you can compare the exact same region of the 18S rRNA gene. To determine what value to set this to, look at the  **If you do not want to trim, then set this to -1**
 
-Then there is a shared settings section, which is where you will detail the locations of your output folders and input reference files.
+Then there is a shared settings section, which is where you will detail the locations of your output folders and input reference files:
 - **`taxonomy_fasta`, `trained_ref_database`, `REFFASTA`** - paths to the PR2 reference FASTA/classifier described in the Folder set-up footnotes.
 - **`EUK_TREE`, `MSA_FASTA_EUK`, `MSA_PHYLIP_EUK`, `CLADES_EUKS`** and the equivalent `CIL_*`, `APM_*`, `PLAGIO_*`, `SCUTI_*` blocks - the tree/alignment/taxonomy files for each phylogenetic placement tier (see "How do I find or generate appropriate reference trees for phylogenetic placement?" below for how to build your own set for a different TOI).
 - **`epa_filter_acc_lwr`, `epa_filter_max`** - EPA-NG's placement-filtering thresholds (minimum accumulated likelihood weight ratio to keep a placement, and the max number of placements retained per query sequence).
