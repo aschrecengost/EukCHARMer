@@ -1,26 +1,31 @@
-# EukSIFT
+# EukCHARM
 
-**Eu**karyotic **S**equence **I**dentification, **F**iltering, and **T**argeted phylogenetic placement of 18S rDNA sequencing reads from NCBI SRA
+## **Euk**aryote-**C**entric **H**arvesting and **A**nalysis of **R**ibosomal **M**arker genes
 
-Written by Anna Schrecengost and Jaliyah Harrison, with help from this QIIME2 Snakemake tutorial from Sarah Hu [(1)](https://www.zotero.org/google-docs/?sUyR2M) and this paper from Isabelle Ewers et al. [(2)](https://www.zotero.org/google-docs/?RMLTd3).
+Written by Anna Schrecengost and Jaliyah Harrison, with help from this QIIME2 Snakemake tutorial from Sarah Hu (1) and this paper from Isabelle Ewers et al. (2). 
 
-Contact us via email with questions:
-aschrecengost@uri.edu
-jaliyahdharrison@gmail.com
+Contact us via email with questions: aschrecengost@uri.edu; jaliyahdharrison@gmail.com
 
-![Figure 1: Pipeline overview](images/SnakemakePipeline.drawio.svg)
+<img width="2978" height="2284" alt="Pipeline" src="https://github.com/user-attachments/assets/454eedb8-7681-453a-a0f1-6cc68ed41568" />
 
-**Figure 1.** Pipeline overview. Major snakemake steps are summarized in green and detailed in the solid boxes. Arrows represent outputs which become inputs for the next steps in the pipeline. White dotted-line boxes indicate user-supplied parameters or files, and green dotted-line boxes indicate end-point outputs.
+**Figure 1.** Pipeline overview. Major snakemake steps are summarized in green and detailed in the solid boxes. Arrows represent outputs which become inputs for the next steps in the pipeline. White dotted-line boxes indicate user-supplied parameters or files, and green dotted-line boxes indicate end-point outputs. The major steps include:
+1. Download metadata from NCBI SRA, format it, and merge across studies
+2. Download raw .fastq files from SRA and import into QIIME2
+3. Merge and denoise reads with QIIME2, vsearch, and deblur, filter and merge results across studies
+4. Phylogenetically place ASVs onto reference trees (using a stepwise approach described below)
+5. Import data into R and phyloseq and generate a simple taxonomic barplot grouped by habitat type and a map showing samples which recovered sequences from TOI
 
 ## Description
 
-This Snakemake pipeline is designed as a tool to interrogate publicly available 18S rRNA metabarcoding datasets for sequences from any given eukaryotic taxon of interest (TOI). It takes a list of SRA accession IDs as input, as well as several user-defined parameters and input files detailed below, and outputs taxonomically-assigned sequences and count tables from your TOI, along with sample metadata and a couple of basic figures generated in R which illustrate the geographic locations and habitat types of samples containing TOI and the relative abundances of TOI across habitat types. As it imports all of the relevant files into R/phyloseq, it is meant as a starting point for your analysis. Example analyses conducted using this pipeline can be seen in this preprint [(3)](https://www.zotero.org/google-docs/?4ceEXV), which conducted a meta-analysis of global marine oxygen-depleted sequencing datasets to explore the diversity and distribution of marine anaerobic ciliates.
+This Snakemake pipeline is designed as a tool to interrogate publicly available 18S rRNA metabarcoding datasets for sequences from any given eukaryotic of interest (TOI). It takes a list of SRA accession IDs as input, as well as several user-defined parameters and input files detailed below, and outputs taxonomically-assigned sequences and count tables from your TOI, along with sample metadata and a couple of basic figures generated in R which illustrate the geographic locations and habitat types of samples containing TOI and the relative abundances of TOI across habitat types. As it imports all of the relevant files into R/phyloseq, it is meant as a starting point for your analysis. Example analyses conducted using this pipeline can be seen in this preprint (3), which conducted a meta-analysis of global marine oxygen-depleted sequencing datasets to explore the diversity and distribution of marine anaerobic ciliates. 
 
-This pipeline is designed to process Illumina short reads which were amplified from any region of the 18S rRNA gene. This works because we use a phylogenetic placement method, which places short reads onto a given full-length reference phylogenetic tree. In this way, ASVs from different primer sets or even different regions of the 18S rRNA gene can be analyzed together. As well as being a good tool for large scale meta-analyses, this method is particularly useful for groups that are not well-represented in reference databases. To learn more check out the following references: [(2,4,5)](https://www.zotero.org/google-docs/?broken=Y86Nym)
+
+This pipeline is designed to process Illumina short reads which were amplified from any region of the 18S rRNA gene. This works because we use a phylogenetic placement method, which places short reads onto a given full-length reference phylogenetic tree. In this way, ASVs from different primer sets or even different regions of the 18S rRNA gene can be analyzed together. As well as being a good tool for large scale meta-analyses, this method is particularly useful for groups that are not well-represented in reference databases. To learn more check out the following references: (2,4,5).
+
 
 ## Setup
 
-It can be run either locally on your computer or on a high-performance computing cluster (HPC). If possible, we recommend the latter, as some of the scripts are memory-intensive. If running on an HPC, you will need to submit it as a batch job (see `submit.sh`) and fill in the cluster configuration file (`cluster.yaml`), which details the computational resources requested for each step in the pipeline. The only requirements are snakemake, conda, and PaPaRa installations on the machine where it is running from.
+It can be run either locally on your computer or on a high-performance computing cluster (HPC). If possible, we strongly recommend the latter, as some of the scripts are memory-intensive. If running on an HPC, you will need to submit it as a batch job (see `submit.sh`) and fill in the cluster configuration file (`cluster.yaml`), which details the computational resources requested for each step in the pipeline. The only requirements are snakemake, conda, and PaPaRa installations on the machine where it is running from.
 
 If you are running locally on your computer, you will need to have [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html), [snakemake](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html), and [PaPaRa](https://cme.h-its.org/exelixis/web/software/papara/index.html) installed. You need to add the PaPaRa executable to your PATH:
 
@@ -46,6 +51,9 @@ Every rule that needs a specific software environment declares its own `conda:` 
 
 ```
 Snakemake/
+│   ├── submit.sh
+│   ├── config.yaml
+│   └── cluster_config.yaml
 ├── reference/
 │   ├── reference_database.fasta*
 │   ├── reference_database.qza*
@@ -66,23 +74,24 @@ Snakemake/
 │   ├── make_empty_qza.py
 │   └── prepare_phyloseq_objects.R
 └── envs/
-    ├── parallelfastqdump.yaml
-    ├── phylo_placement.yaml
-    ├── pysradb.yaml
-    ├── qiime2-amplicon-2026.1.yaml
-    └── r_figures.yaml
-```
+│   ├── parallelfastqdump.yaml
+│   ├── phylo_placement.yaml
+│   ├── pysradb.yaml
+│   ├── qiime2-amplicon-2026.1.yaml
+│   └── r_figures.yaml
+├── **data/
+│   └──raw/
+├── results/
+└── visualization/
 
-\* We provide a taxonomic classifier trained with QIIME2 v2026.4.0 on [PR2](https://pr2-database.org/) v5.1.1; [instructions to train your own classifier are here](#generating-the-large-reference-files-yourself). The QIIME2 version that you are running must be the same as the one you use to train the classifier. Similarly, the `reference_database.fasta` and `reference_database.qza` are from PR2 v5.1.1 and obtained with `qiime rescript get-pr2-data`.
+```
+**Folders in bold will populate while the pipeline is running and their names are specified in the config.yaml file (raw_data, output, and visualization).**
+
+\* For `classifier.qza`, we used a taxonomic classifier trained on PR2 [PR2](https://pr2-database.org/) v5.1.1; [instructions to train your own classifier are here](#generating-the-large-reference-files-yourself). The QIIME2 version that you are running must be the same as the one you use to train the classifier. Similarly, the `reference_database.fasta` and `reference_database.qza` are from PR2 v5.1.1 and obtained with `qiime rescript get-pr2-data`. These three files are excluded from the git repo (see `.gitignore`) because they're too large to distribute via git.
 
 \*\* Eukaryotic reference trees and files were obtained from [(4)](https://www.zotero.org/google-docs/?ilQoQ1).
 
 \*\*\* You must provide phylogenetic reference trees for your TOI. If you are surveying a taxonomic group within Ciliophora, we provide the relevant files: `ciliate_reference_tax.txt`, `ciliate_reference_tree.fasta`, `ciliate_reference_tree.phy`, which were obtained and prepared from [(5)](https://www.zotero.org/google-docs/?ngbr9x). See the section "How do I find or generate appropriate reference trees for phylogenetic placement?" below.
-
-<!-- NOTE: the three lines below appear to be an earlier/stale draft of the footnote above (same content, "XX" placeholders instead of real version numbers, and an unfinished "We also provide" sentence) - left as-is rather than removed, since you asked to be consulted before anything gets deleted. Worth checking whether this should be reconciled with or replaced by the footnote above. -->
-We provide a classifier trained on PR2 version XX with QIIME2 version XX; [instructions to train your own classifier here](#generating-the-large-reference-files-yourself). The QIIME2 version that you are running must be the same as the one used to train the classifier
-Similarly reference_database.fasta and .qza are from PR2; provided here but [instructions on how to generate here](#generating-the-large-reference-files-yourself)
-We also provide
 
 ## Getting started: a technical walkthrough
 
@@ -95,9 +104,9 @@ Everything that runs *inside* a Snakemake rule - QIIME2, `epa-ng`, `gappa`, `rax
 The things that are *not* handled this way, and that you are responsible for having on the machine that launches the pipeline:
 - **Snakemake** itself and **conda** (see [Setup](#setup) above for install links).
 - **PaPaRa**, for the reasons noted in the callout above - PaPaRa isn't packaged on conda-forge/bioconda, so it has to be available as a `papara` command (locally) or an HPC module (on a cluster) before you run the pipeline.
-- **`reference/reference_database.fasta`, `reference/reference_database.qza`, and `reference/classifier.qza`** - these three files are excluded from the git repo (see `.gitignore`) because they're too large to distribute via git (303MB/49MB/209MB respectively - the first two alone exceed GitHub's 100MB per-file limit). See the next section for how to generate them yourself; it only needs to be done once.
+- **`reference/reference_database.fasta`, `reference/reference_database.qza`, and `reference/classifier.qza`** - these three files are excluded from the git repo (see `.gitignore`) because they're too large to distribute via git. See the next section for how to generate them yourself; it only needs to be done once.
 
-If you're on an HPC that uses Environment Modules/Lmod (as we are, on Unity), you'll also typically need to load `conda` itself via a module before the `snakemake`/`conda` commands are available - check with your cluster's documentation. `submit.sh` has commented-out `module load` lines showing what we use on Unity as a starting point.
+If you're on an HPC that uses Environment Modules/Lmod, you'll also typically need to load `conda` itself via a module before the `snakemake`/`conda` commands are available - check with your cluster's documentation. `submit.sh` has commented-out `module load` lines showing what we use on our HPC as a starting point.
 
 #### Generating the large reference files yourself
 
@@ -137,8 +146,16 @@ qiime feature-classifier fit-classifier-naive-bayes \
 
 ### 2. Configuring `config.yaml`
 
-`config.yaml` is where you describe your input datasets and every tunable parameter. The `projects` / `project_settings` fields are already covered above under ["I have my SRA accession IDs, now what?"](#i-have-my-sra-accession-ids-now-what). Beyond that section, a few more settings you'll want to know about that aren't described there yet:
+`config.yaml` is where you describe your input datasets and every tunable parameter. Under the "Projects" heading, list the names of the datasets you will be using. Then, fill in all the details for each project:
 
+- `SRAid`: BioProject accession ID
+- `primerF`: Forward primer sequence used to amplify DNA, 5' --> 3'
+- `primerR`: Reverse primer sequence used to amplify DNA, 5' --> 3'
+- `max_diffs_merge`:
+- `minovlen_merge`:
+- `p_trim_length`:
+
+Then there is a shared settings section, which is where you will detail the locations of your output folders and input reference files.
 - **`taxonomy_fasta`, `trained_ref_database`, `REFFASTA`** - paths to the PR2 reference FASTA/classifier described in the Folder set-up footnotes.
 - **`EUK_TREE`, `MSA_FASTA_EUK`, `MSA_PHYLIP_EUK`, `CLADES_EUKS`** and the equivalent `CIL_*`, `APM_*`, `PLAGIO_*`, `SCUTI_*` blocks - the tree/alignment/taxonomy files for each phylogenetic placement tier (see "How do I find or generate appropriate reference trees for phylogenetic placement?" below for how to build your own set for a different TOI).
 - **`epa_filter_acc_lwr`, `epa_filter_max`** - EPA-NG's placement-filtering thresholds (minimum accumulated likelihood weight ratio to keep a placement, and the max number of placements retained per query sequence).
