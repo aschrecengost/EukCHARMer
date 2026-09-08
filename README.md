@@ -201,7 +201,7 @@ Either way, the first run will take a while, since every conda environment needs
 
 The first step is to find SRA BioProjects containing paired-end 18S rDNA reads which were sequenced with Illumina and which contain samples that you're interested in. They could be from a habitat type you're interested in or suspect contains TOI, for example. Since authors are mostly required to deposit their raw sequencing data into SRA or some other repository and report accession IDs, a literature review is a good place to start to collect SRA accession IDs and associated project information (we recommend you record the forward and reverse primer sequences used to amplify, the expected amplicon length, and the read length; and optionally, any other information you want to have associated with the project, like habitat type, location, whether they amplified DNA or cDNA, whether they used one primer pair or a nested primer strategy, etc.). The website [sra-explorer.info](http://sraexplorer.com) is also helpful to search NCBI SRA for samples from given habitat types. If you know of another tool that makes searching SRA easier, email us and let us know and we can add it here!
 
-If you want to include studies that are not on SRA, that is totally fine – you will just need to download the files yourself, deposit them in a folder with 
+> If you want to include studies that are not on SRA, this is a feature that we will support in a future update. 
 
 
 ### How do I find or generate appropriate reference trees for phylogenetic placement? 
