@@ -1,10 +1,15 @@
 # EukCHARMer
 
-**Euk**aryote-**C**entric **H**arvesting and **A**nalysis of **R**ibosomal **M**ark**er** genes
+### **Euk**aryote-**C**entric **H**arvesting and **A**nalysis of **R**ibosomal **M**ark**er** genes
 
 Written by Anna Schrecengost and Jaliyah Harrison, with help from this QIIME2 Snakemake tutorial from Sarah Hu (1) and this paper from Isabelle Ewers et al. (2). 
 
 Contact us via email with questions: aschrecengost@uri.edu; jaliyahdharrison@gmail.com
+
+## Table of Contents
+- [Description](#Description)
+- [Set-up](#Setup)
+- [Tutorial](#Getting started: a tutorial)
 
 <img width="2978" height="2284" alt="Pipeline" src="https://github.com/user-attachments/assets/454eedb8-7681-453a-a0f1-6cc68ed41568" />
 
@@ -36,9 +41,6 @@ chmod +x "$HOME/bin/papara"
 echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.zshrc"
 source "$HOME/.zshrc"
 ```
-
-> **Current limitation:** every `papara_*` rule in the Snakefile currently calls `module load papara_nt/2.5` before running `papara`, which only works on HPC systems using Environment Modules/Lmod (this is how we run it on Unity). If you've installed PaPaRa locally and added it to your `PATH` as described above, that `module load` line will still fail on its own even though `papara` is available. This is the same gap called out below in [Known limitations](#known-limitations) - until it's resolved, running locally currently requires removing/commenting out the five `module load papara_nt/2.5` lines from the Snakefile yourself.
-
 Then run the Snakefile with:
 
 ```
@@ -91,11 +93,12 @@ Snakemake/
 
 \*\* Eukaryotic reference trees and files were obtained from [(4)](https://www.zotero.org/google-docs/?ilQoQ1).
 
-\*\*\* You must provide phylogenetic reference trees for your TOI. If you are surveying a taxonomic group within Ciliophora, we provide the relevant files: `ciliate_reference_tax.txt`, `ciliate_reference_tree.fasta`, `ciliate_reference_tree.phy`, which were obtained and prepared from [(5)](https://www.zotero.org/google-docs/?ngbr9x). See the section "How do I find or generate appropriate reference trees for phylogenetic placement?" below.
+\*\*\* You must provide phylogenetic reference trees for your TOI. If you are surveying a taxonomic group within Ciliophora, we provide the relevant files: `ciliate_reference_tax.txt`, `ciliate_reference_tree.fasta`, `ciliate_reference_tree.phy`, which were obtained and prepared from [(5)](https://www.zotero.org/google-docs/?ngbr9x). See the section "How do I find or generate appropriate reference trees for phylogenetic placement?"(#How do I find or generate appropriate reference trees for phylogenetic placement?)
 
-## Getting started: a technical walkthrough
 
-This section walks through actually getting a run going, end to end, on top of the summary above.
+## Getting started: a tutorial
+
+This section walks through running the pipeline beginning to end. 
 
 ### 1. What gets installed automatically, and what doesn't
 
@@ -103,14 +106,14 @@ Everything that runs *inside* a Snakemake rule - QIIME2, `epa-ng`, `gappa`, `rax
 
 The things that are *not* handled this way, and that you are responsible for having on the machine that launches the pipeline:
 - **Snakemake** itself and **conda** (see [Setup](#setup) above for install links).
-- **PaPaRa**, for the reasons noted in the callout above - PaPaRa isn't packaged on conda-forge/bioconda, so it has to be available as a `papara` command (locally) or an HPC module (on a cluster) before you run the pipeline.
+- **PaPaRa** must be installed separately or made available by an HPC administrator: see [Setup](#setup)
 - **`reference/reference_database.fasta`, `reference/reference_database.qza`, and `reference/classifier.qza`** - these three files are excluded from the git repo (see `.gitignore`) because they're too large to distribute via git. See the next section for how to generate them yourself; it only needs to be done once.
 
 If you're on an HPC that uses Environment Modules/Lmod, you'll also typically need to load `conda` itself via a module before the `snakemake`/`conda` commands are available - check with your cluster's documentation. `submit.sh` has commented-out `module load` lines showing what we use on our HPC as a starting point.
 
 #### Generating the large reference files yourself
 
-These are built from [PR2](https://pr2-database.org/) via QIIME2's `rescript` plugin, using the exact same `envs/qiime2-amplicon-2026.1.yaml` environment the rest of the pipeline uses (important - see the note on version-matching below). Build and activate that environment once, standalone:
+These are built from [PR2](https://pr2-database.org/) via QIIME2's `rescript` plugin, using the exact same `envs/qiime2-amplicon-2026.1.yaml` environment the rest of the pipeline uses (important - see the note on version-matching below). Build and activate that environment once:
 
 ```
 conda env create -f envs/qiime2-amplicon-2026.1.yaml -n qiime2-amplicon-2026.1
@@ -140,11 +143,9 @@ qiime feature-classifier fit-classifier-naive-bayes \
     --o-classifier reference/classifier.qza
 ```
 
-`get-pr2-data` requires a stable internet connection (it downloads directly from PR2) and step 3 is the most memory/time-intensive of the three - expect it to take a while and to need a reasonable amount of RAM, so run it on a compute node/allocation rather than a login node if you're on an HPC.
+`get-pr2-data` requires a stable internet connection (it downloads directly from PR2) and step 3 is the most memory/time-intensive of the three - expect it to take a while and to need a reasonable amount of RAM, so run it on a compute node/allocation if you're on an HPC.
 
 Code for how to train a taxonomic classifier on the SILVA database can be found [here](https://github.com/tripitakit/qiime2class). Some databases provide taxonomic classifiers for QIIME2 also on their websites. 
-
-> **Version discrepancy, flagged rather than silently resolved:** the folder-set-up footnote above states the classifier was trained with QIIME2 v2026.4.0 on PR2 v5.1.1. Checked directly against what's actually installed via `envs/qiime2-amplicon-2026.1.yaml` (the only QIIME2 environment wired into the Snakefile): the `rescript` plugin there is version `2026.1.0`, and its `get-pr2-data` action only accepts `--p-version 5.1.0` or `5.0.0` - `5.1.1` is not an available choice and would error. The commands above use `5.1.0` and QIIME2 `2026.1.0` since that's what's verifiably installed and wired into this repo; if `classifier.qza` was genuinely built with 2026.4.0 on PR2 5.1.1, either that footnote is describing a different environment than the one this repo currently ships, or it needs correcting - worth resolving before publishing, since **QIIME2 classifier artifacts need to match the QIIME2 version used to run them** (also already noted in that footnote).
 
 ### 2. Configuring `config.yaml`
 
@@ -152,27 +153,27 @@ Code for how to train a taxonomic classifier on the SILVA database can be found 
 
 - **`SRAid`** - BioProject accession ID
 - **`primerF`** and **`primerR`**: Forward and reverse primer sequence used to amplify DNA, 5' --> 3'
-- **`max_diffs_merge`** - The maximum amount of bp pairwise differences allowed in the overlap region during vsearch's merging step. A good value for this is ~20% of the overlap length. Here the default is set to 40. If most of your reads are not merging, you may want to play around with this parameter and minovlen_merge; a discussion of these parameters can be found [here](https://forum.qiime2.org/t/question-regarding-parameters-used-in-qiime-vsearch-join-pairs/12289):  
+- **`max_diffs_merge`** - The maximum amount of bp pairwise differences allowed in the overlap region during vsearch's merging step. A good value for this is ~20% of the overlap length. Here the default is set to 40. If most of your reads are not merging, you may want to play around with this parameter and minovlen_merge; a discussion of these parameters can be found [here](https://forum.qiime2.org/t/question-regarding-parameters-used-in-qiime-vsearch-join-pairs/12289).  
 - **`minovlen_merge`** - Minimum overlap length for vsearch to merge paired-end reads. Most of the problems with vsearch are reported to be with really short overlaps (like 10bp), so setting this value to 50 is essentially the same as setting it to 200. The default in our pipeline is 50; if you expect a shorter overlap then you should lower this value. Expected overlap is calculated with (2*read length) - amplicon length. 
-- **`p_trim_length`** - This parameter trims all merged reads to this length before denoising with deblur; all reads which are shorter than this are dropped. It is important to include this if your read lengths are hetereogenous as deblur requires all reads are the same length. Also, for example, if you are comparing studies which used the same primer set, it is crucial to set this parameter to the same value for all studies so that you can compare the exact same region of the 18S rRNA gene. To determine what value to set this to, look at the -merged.qzv visualization: see section [5. Checking on a run / what to expect] (#5. Checking on a run / what to expect). **If you do not want to trim, then set this to -1**
+- **`p_trim_length`** - This parameter trims all merged reads to this length before denoising with deblur; all reads which are shorter than this are dropped. It is important to include this if your read lengths are hetereogenous as deblur requires all reads are the same length. Also, for example, if you are comparing studies which used the same primer set, it is crucial to set this parameter to the same value for all studies so that you can compare the exact same region of the 18S rRNA gene. To determine what value to set this to, look at the -merged.qzv visualization: see section [5. Checking on a run / what to expect](#5. Checking on a run / what to expect). **If you do not want to trim, then set this to -1**.
 
 Then there is a shared settings section, which is where you will detail the locations of your output folders and input reference files. Here are the values that you will likely need to change:
 
-- **`p_include_unassigned`, `p_include_taxa`** - In `qiime taxa filter-table`/`filter-seqs` `--p-include` values are used to filter all of the denoised sequences from each project for downstream processing. We include unassigned sequences because phylogenetic placement is often able to assign reads where pairwise methods fail. We set `p_include_unassigned` to `Unassigned,Eukaryota,Eukaryota;TSAR,Eukaryota;TSAR;Alveolata` and `p_inlcude_taxa` to `Ciliophora` because we wanted to obtain ciliate sequences; **you need to change these values based on your TOI**,
-- **`search_term_taxa`, `search_term_clade1`, `search_term_clade2`, `search_term_clade3`** - the taxopath substrings used to extract placements from each placement step. `search_term_taxa` is used to extract placements from the Eukaryote tree. Sequences assigned to this group will then be placed onto the Major Taxon tree, and then placements from that tree are extracted with `search_term_clade1`, and optionally `search_term_clade2` and `search_term_clade3`, and then placed on their corresponding Clade trees. In our example, `search_term_taxa` = `Ciliophora`, `search_term_clade1` = `Armophorea`, `search_term_clade2` = `Plagiopylea`, `search_term_clade3` = `Anaerocycliididae`.
-- - **`EUK_TREE`, `MSA_FASTA_EUK`, `MSA_PHYLIP_EUK`, `CLADES_EUKS`** and the equivalent `TAXON_*`, `CLADE1_*`, `CLADE2_*`, `CLADE3_*` blocks - the tree/alignment/taxonomy files for each phylogenetic placement step (see "How do I find or generate appropriate reference trees for phylogenetic placement?" below for how to build your own set for a different TOI).
+- **`p_include_unassigned`, `p_include_taxa`** - In `qiime taxa filter-table`/`filter-seqs` `--p-include` values are used to filter all of the denoised sequences from each project for downstream processing. We include unassigned sequences because phylogenetic placement is often able to assign reads where pairwise methods fail. We set `p_include_unassigned` to `Unassigned,Eukaryota,Eukaryota;TSAR,Eukaryota;TSAR;Alveolata` and `p_inlcude_taxa` to `Ciliophora` because we wanted to obtain ciliate sequences; **you need to change these values based on your TOI**.
+- **`search_term_taxa`, `search_term_clade1`, `search_term_clade2`, `search_term_clade3`** - the taxopath substrings used to extract placements from each placement step. `search_term_taxa` is used to extract placements from the Eukaryote tree. Sequences assigned to this group will then be placed onto the Taxon tree, and then placements from that tree are extracted with `search_term_clade1`, and optionally `search_term_clade2` and `search_term_clade3`, and then placed on their corresponding Clade trees. In our example, `search_term_taxa` = `Ciliophora`, `search_term_clade1` = `Armophorea`, `search_term_clade2` = `Plagiopylea`, `search_term_clade3` = `Anaerocycliididae`.
+- **`EUK_TREE`, `MSA_FASTA_EUK`, `MSA_PHYLIP_EUK`, `CLADES_EUKS`** and the equivalent `TAXON_*`, `CLADE1_*`, `CLADE2_*`, `CLADE3_*` blocks - the tree/alignment/taxonomy files for each phylogenetic placement step (see "How do I find or generate appropriate reference trees for phylogenetic placement?" below for how to build your own set for a different TOI).
 
 Here are the remaining values: 
-- **`taxonomy_fasta`, `trained_ref_database`, `REFFASTA`** - paths to the reference FASTA/classifier described in the Folder set-up footnotes.
+- **`taxonomy_fasta`, `trained_ref_database`, `REFFASTA`** - paths to the reference FASTA/classifier described in the [Setup](#setup).
 - **`epa_filter_acc_lwr`, `epa_filter_max`** - EPA-NG's placement-filtering thresholds. EPA-ng sorts the placements by their likelihood weight ratio (LWR) in descending order and  adds branches to the output file until their combined sum meets or exceeds your specified threshold (epa_filter_acc_lwr), and then in the output .jplace file retains the top X number of placements as determined by epa_filter_max. We have set those to 0.99 and 100, respectively, in order to give us the best possible idea of the placement distribution, for downstream taxonomic assignment. For more reading about how the placement steps work, refer to (4).
-- **`gappa_mass_norm`** - passed straight through to `gappa examine heat-tree`, which generates a figure of your reference phylogenetic tree with branches colored by the total mass of placements at that branch. This parameter controls how the total placement masses are normalized before mapping them to the tree. We set this to "absolute"; in this case, only the top placement is shown, and so the heatmap corresponds to the total # of ASVs which were assigned to each branch. For more reading on how gappa tools work, refer to (6).
-- **`gappa_consensus_thresh`** - In `gappa examine assign`, which uses the phylogenetic placement results and a given taxonomic reference file to taxonomically assign query ASVs. This parameter controls the minimum proportion of descendant nodes required to agree on a taxonomic label when resolving inner nodes on the reference tree. 
+- **`gappa_mass_norm`** - a parameter of `gappa examine heat-tree`, which generates a figure of your reference phylogenetic tree with branches colored by the total mass of placements at that branch. This parameter controls how the total placement masses are normalized before mapping them to the tree. We set this to "absolute"; in this case, only the top placement is shown, and so the heatmap corresponds to the total # of ASVs which were assigned to each branch. For more reading on how gappa tools work, refer to (6).
+- **`gappa_consensus_thresh`** - a parameter of `gappa examine assign`, which uses the phylogenetic placement results and a given taxonomic reference file to taxonomically assign query ASVs. This parameter controls the minimum proportion of descendant nodes required to agree on a taxonomic label when resolving inner nodes on the reference tree. 
 - **`edpl_threshold`** - The maximum Expected Distance between Placement Locations (EDPL) allowed for a placement to be counted as high-confidence; this is what separates the raw placement output from the `filtered_*_LWR_EDPL.tsv` files that feed into the next placement (and, for the clade-level trees, into the final R figures). We set this value to 0.05.
 - **`p_min_length`, `filter_minquality`, `primer_err`** - default QC parameters (minimum read length, minimum quality score, and primer-matching error tolerance) applied across all projects unless overridden per-project.
 
 ### 3. Configuring `cluster.yaml` (HPC only)
 
-If you're running on an HPC via `submit.sh`, `cluster.yaml` tells Snakemake how much to request from your scheduler (Slurm, in our case) for each rule: `partition`, `time`, `mem`, `ntasks`, `nodes`. There's a `__default__` block used for any rule without its own entry, plus dedicated entries for the compute-heavy steps (deblur, taxonomy classification, and every phylogenetic placement rule) that need more than the default. If you add new rules, or find the defaults don't fit your cluster, this is the file to edit - the `submit.sh` `--cluster` command line is already wired to read from it.
+If you're running on an HPC via `submit.sh`, `cluster.yaml` tells Snakemake what computational resources to request from your scheduler (we use Slurm) for each rule. There are inputs for `partition`, `time`, `mem`, `ntasks`, and `nodes` for the most resource-intensive rules and a `__default__` block used for any rule without its own entry. **You need to edit this file according to your HPC.**
 
 ### 4. Running it
 
@@ -188,13 +189,20 @@ snakemake -s Snakefile --cores all --use-conda --rerun-incomplete
 
 Either way, the first run will take a while, since every conda environment needs to be built from scratch and (for the SRA-derived projects) raw reads need to be downloaded. Subsequent runs reuse the built environments and any already-completed outputs.
 
-### 5. Checking on a run / what to expect
+### 5. Outputs
 
-- **`results/`** fills in results per-project: (`results/<BioProject accession>/...`); for all of the projects merged together: `results/_merged/`; the phylogenetic placement results: `results/_placement/` (the Eukaryote tree), `results/_Taxon_placement/` (the Taxon tree), and `results/_clade1_placement/`, `results/_clade2_placement/`, `results/_clade3_placement/` (the clade-specific trees)
-- **`results/visualizations/`** holds `.qzv` files you can upload to [view.qiime2.org](https://view.qiime2.org) to visualize to see what the reads look like after each step and diagnose any issues that might have occurred. Check `-PE-demux-noprimer-merged-filtered.qzv` for read length distributions prior to deblur to choose `p_trim_length`. Check `-deblur-stats.qzv` to see the statistics for the deblur run and determine if it ran sucessfully. See [here](https://forum.qiime2.org/t/deblur-stats-qzv-file-meaning-and-interpretation/3748/7) for a discussion on what these stats mean.
+- **`results/`** fills in results per-project: `results/<Project name>/...`,
+    - for all of the projects merged together: `results/_merged/`,
+    - the phylogenetic placement results: `results/_placement/` (the Eukaryote tree),
+    - `results/_Taxon_placement/` (the Taxon tree),
+    - and `results/_clade1_placement/`, `results/_clade2_placement/`, `results/_clade3_placement/` (the clade-specific trees)
+- **`results/visualizations/`** stores `.qzv` files you can upload to [view.qiime2.org](https://view.qiime2.org) to visualize to see what the reads look like after each step and diagnose any issues that might have occurred.
+    - Check `-PE-demux-noprimer-merged-filtered.qzv` for read length distributions prior to deblur to choose `p_trim_length`
+    - Check `-deblur-stats.qzv` to see the statistics for the deblur run and determine if it ran sucessfully. See [here](https://forum.qiime2.org/t/deblur-stats-qzv-file-meaning-and-interpretation/3748/7) for a discussion on what these stats mean.
 - **`results/_figures/`** holds the final R outputs: the phyloseq object (`ps.rds`, which can be imported into R for further analyses), the taxa barplot and sample map (as both PDF and PNG), the cleaned/combined metadata and taxonomy tables, and **`metadata_gaps.txt`** - a report of exactly which metadata columns are incomplete for which projects, generated automatically every run (see [Known limitations](#known-limitations) for why we report gaps rather than trying to auto-fill them).
 - **On an HPC**, per-rule logs land in `slurm-logs/<rule>.<jobid>.log`; the top-level `slurm-<jobid>.out` file is the master Snakemake driver log showing overall progress through the DAG.
-- If a run stops partway through, both `sbatch submit.sh` and the local `snakemake` command above are safe to re-run - Snakemake picks up from whatever's already been produced rather than starting over. If you cancel the run yourself, you will need to run `snakemake --unlock` from the directory where the snakefile is located prior to rerunning. 
+- If a run stops partway through, both `sbatch submit.sh` and the local `snakemake` command above are safe to re-run - Snakemake picks up from whatever's already been produced rather than starting over.
+    - If you cancel the run yourself, you will need to run `snakemake --unlock` from the directory where the snakefile is located prior to rerunning. 
 
 
 ### What kind of sequencing data can I include as input?
@@ -203,21 +211,13 @@ The first step is to find SRA BioProjects containing paired-end 18S rDNA reads w
 
 > If you want to include studies that are not on SRA, this is a feature that we will support in a future update. 
 
-
 ### How do I find or generate appropriate reference trees for phylogenetic placement? 
 
-This Snakemake pipeline uses a multi-level phylogenetic placement scheme, as described in (5) and used in e.g. (3,6).
+This Snakemake pipeline uses a multi-level phylogenetic placement scheme, as described in (5) and used in e.g. (3,6), and summarized in Figure 2: 
 
-### Known limitations
+<img width="794" height="1123" alt="multilevel_placement" src="https://github.com/user-attachments/assets/89fd3415-d59a-4a88-9656-e54812fc86d3" />
+**Figure 2** 3-tier multilevel placement scheme, adapted from (5). 1: Unassigned sequences (A) are placed onto the Eukaryote tree, and sequences from your Taxon of choice (purple) are extracted. 2: Sequences which are assigned to you Taxon of choice, either via placement onto the euk tree (A) or taxonomic assignment with QIIME2 (B, C) are placed onto the Taxon tree. Branches that are associated with a clade tree are colored accordingly (orange and green). 3: Clade trees. The backbone tree and clade trees overlap each other such that each clade tree is represented by branches in the backbone tree. Three sequences A, B, and C are placed 
 
-These are open items, not yet resolved, tracked here so they're visible rather than silently missing:
-
-- **PaPaRa loading isn't configurable** - every `papara_*` rule hardcodes `module load papara_nt/2.5`, which assumes an HPC with Environment Modules and a module by that exact name. There's currently no config switch for "just use `papara` from PATH" on a local machine.
-- **No shortcut to stop before phylogenetic placement** - because of how Snakemake resolves `rule all`'s dependencies, there isn't currently a simple way to run only through the QIIME2/denoising steps without commenting out large chunks of `rule all`. See the proposed `rule pre_placement` in the issues list below.
-- **QIIME2 environment files aren't split by OS** - only one `envs/qiime2-amplicon-2026.1.yaml` (built for Linux) is wired into the Snakefile.
-
-
-<!-- NOTE: currently only envs/qiime2-amplicon-2026.1.yaml is wired into the Snakefile (conda: directive in every QIIME2 rule) - that's the version actually in use. An older, unused envs/qiime2-amplicon-2023.9-py38-linux-conda.yml that nothing referenced has been removed. -->
 
 ## References:
 
