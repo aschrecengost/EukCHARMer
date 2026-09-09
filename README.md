@@ -1,6 +1,6 @@
-# EukCHARM
+# EukCHARMer
 
-## **Euk**aryote-**C**entric **H**arvesting and **A**nalysis of **R**ibosomal **M**arker genes
+**Euk**aryote-**C**entric **H**arvesting and **A**nalysis of **R**ibosomal **M**ark**er** genes
 
 Written by Anna Schrecengost and Jaliyah Harrison, with help from this QIIME2 Snakemake tutorial from Sarah Hu (1) and this paper from Isabelle Ewers et al. (2). 
 
