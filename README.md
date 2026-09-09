@@ -7,9 +7,18 @@ Written by Anna Schrecengost and Jaliyah Harrison, with help from this QIIME2 Sn
 Contact us via email with questions: aschrecengost@uri.edu; jaliyahdharrison@gmail.com
 
 ## Table of Contents
-- [Description](#Description)
-- [Set-up](#Setup)
-- [Tutorial](#Getting) 
+- [Description](#description)
+- [Setup](#setup)
+    - [Folder setup](#folder-setup)
+- [Tutorial](#tutorial)
+    - [Generating reference files](#generating-the-large-reference-files-yourself)
+    - [Configuring `config.yaml`](#configuring-`config.yaml`)
+    - [Configuring `cluster.yaml` (HPC only)](#configuring-`cluster.yaml`)
+    - [Running it](#running-it)
+    - [Outputs](#outputs)
+ - [What kind of sequencing data can I include as input?](#what-kind-of-sequencing-data-can-I-include-as-input?)
+ - [How do I find or generate appropriate reference trees for phylogenetic placement?](#how-do-I-find-or-generate-appropriate-reference-trees-for-phylogenetic-placement?)
+ - [References](#references)
 
 
 <img width="2978" height="2284" alt="Pipeline" src="https://github.com/user-attachments/assets/454eedb8-7681-453a-a0f1-6cc68ed41568" />
@@ -97,7 +106,7 @@ Snakemake/
 \*\*\* You must provide phylogenetic reference trees for your TOI. If you are surveying a taxonomic group within Ciliophora, we provide the relevant files: `ciliate_reference_tax.txt`, `ciliate_reference_tree.fasta`, `ciliate_reference_tree.phy`, which were obtained and prepared from [(5)](https://www.zotero.org/google-docs/?ngbr9x). See the section "How do I find or generate appropriate reference trees for phylogenetic placement?"(#How do I find or generate appropriate reference trees for phylogenetic placement?)
 
 
-## Getting started: a tutorial
+## Tutorial
 
 This section walks through running the pipeline beginning to end. 
 
@@ -216,7 +225,8 @@ The first step is to find SRA BioProjects containing paired-end 18S rDNA reads w
 
 This Snakemake pipeline uses a multi-level phylogenetic placement scheme, as described in (5) and used in e.g. (3,6), and summarized in Figure 2: 
 
-<img width="794" height="1123" alt="multilevel_placement" src="https://github.com/user-attachments/assets/89fd3415-d59a-4a88-9656-e54812fc86d3" />
+<img width="5479" height="4471" alt="multilevel_placement" src="https://github.com/user-attachments/assets/ba80cbe2-8c3c-4a22-b482-ddc814d9388d" />
+
 **Figure 2** 3-tier multilevel placement scheme, adapted from (5). 1: Unassigned sequences (A) are placed onto the Eukaryote tree, and sequences from your Taxon of choice (purple) are extracted. 2: Sequences which are assigned to you Taxon of choice, either via placement onto the euk tree (A) or taxonomic assignment with QIIME2 (B, C) are placed onto the Taxon tree. Branches that are associated with a clade tree are colored accordingly (orange and green). 3: Clade trees. The backbone tree and clade trees overlap each other such that each clade tree is represented by branches in the backbone tree. Three sequences A, B, and C are placed 
 
 
