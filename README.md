@@ -9,7 +9,8 @@ Contact us via email with questions: aschrecengost@uri.edu; jaliyahdharrison@gma
 ## Table of Contents
 - [Description](#Description)
 - [Set-up](#Setup)
-- [Tutorial](#Getting started: a tutorial)
+- [Tutorial](#Getting) 
+
 
 <img width="2978" height="2284" alt="Pipeline" src="https://github.com/user-attachments/assets/454eedb8-7681-453a-a0f1-6cc68ed41568" />
 
