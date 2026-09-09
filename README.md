@@ -227,7 +227,16 @@ This Snakemake pipeline uses a multi-level phylogenetic placement scheme, as des
 
 <img width="5479" height="4471" alt="multilevel_placement" src="https://github.com/user-attachments/assets/ba80cbe2-8c3c-4a22-b482-ddc814d9388d" />
 
-**Figure 2** 3-tier multilevel placement scheme, adapted from (5). 1: Unassigned sequences (A) are placed onto the Eukaryote tree, and sequences from your Taxon of choice (purple) are extracted. 2: Sequences which are assigned to you Taxon of choice, either via placement onto the euk tree (A) or taxonomic assignment with QIIME2 (B, C) are placed onto the Taxon tree. Branches that are associated with a clade tree are colored accordingly (orange and green). 3: Clade trees. The backbone tree and clade trees overlap each other such that each clade tree is represented by branches in the backbone tree. Three sequences A, B, and C are placed 
+**Figure 2** 3-tier multilevel placement scheme, adapted from (5). Processed ASVs from all studies are pre-filtered based on QIIME2 taxonomic assignment. 1: Unassigned sequences (A) are placed onto the Eukaryote tree, and sequences from your TOI (purple) are extracted. 2: Sequences which are assigned to you Taxon of choice, either via placement onto the euk tree (A) or taxonomic assignment with QIIME2 (B, C) are placed onto the Taxon tree. Branches that are associated with a clade tree are colored accordingly (blue, orange, and green). 3: Clade trees. The backbone tree and clade trees overlap each other such that each clade tree is represented by branches in the backbone tree. Three sequences A, B, and C which were assigned to your clades of interest on the Taxon tree are placed onto their respective clade tree. 
+
+The multi-level placement approach utilized in this Snakemake pipeline reduces overall computational time, increases the accuracy of taxonomic assignments, allows the user to gain more fine-scale phylogenetic information about their recovered sequences, and, because we also include sequences which were unassigned 
+
+Each placement step requires users to provide 4 files: 
+- reference alignment files in both `.fasta` and `.phylip` format (in the config file, specified by `MSA_FASTA_`, `MSA_PHYLIP_`),
+- the reference `.tree` file (`_TREE`), and
+- reference taxonomic information in a `.txt` file (`CLADES_`)
+
+You can generate your own reference trees or use published trees if they are available. For example, we used published trees and alignments from (6), (7), and (9). For the remaining clade trees, we generated our own. For this, we co
 
 
 ## References:
@@ -240,3 +249,4 @@ This Snakemake pipeline uses a multi-level phylogenetic placement scheme, as des
 6. Mahé F, de Vargas C, Bass D, Czech L, Stamatakis A, Lara E, et al. Parasites dominate hyperdiverse soil protist communities in Neotropical rainforests. Nat Ecol Evol. 2017 Apr;1(4):0091.
 7. Rajter Ľ, Dunthorn M. Ciliate SSU-rDNA reference alignments and trees for phylogenetic placements of metabarcoding data. Metabarcoding Metagenomics. 2021 Aug 30;5:e69602.
 8. Czech L, Barbera P, Mahe F. lzech/gappa. 2025. Available from: github.com/lczech/gappa
+9. Poláková K, Bourland WA, Čepička I. Anaerocyclidiidae fam. nov.(Oligohymenophorea, Scuticociliatia): a newly recognized major lineage of anaerobic ciliates hosting prokaryotic symbionts. European Journal of Protistology. 2023 Aug 1;90:126009.
