@@ -11,13 +11,13 @@ Contact us via email with questions: aschrecengost@uri.edu; jaliyahdharrison@gma
 - [Setup](#setup)
     - [Folder setup](#folder-setup)
 - [Tutorial](#tutorial)
-    - [Generating reference files](#generating-the-large-reference-files-yourself)
-    - [Configuring `config.yaml`](#configuring-`config.yaml`)
-    - [Configuring `cluster.yaml` (HPC only)](#configuring-`cluster.yaml`)
-    - [Running it](#running-it)
-    - [Outputs](#outputs)
- - [What kind of sequencing data can I include as input?](#what-kind-of-sequencing-data-can-I-include-as-input?)
- - [How do I find or generate appropriate reference trees for phylogenetic placement?](#how-do-I-find-or-generate-appropriate-reference-trees-for-phylogenetic-placement?)
+    - [Generating the large reference files yourself](#generating-the-large-reference-files-yourself)
+    - [2. Configuring `config.yaml`](#2-configuring-configyaml)
+    - [3. Configuring `cluster.yaml` (HPC only)](#4-configuring-clusteryaml)
+    - [4. Running it](#4-running-it)
+    - [5. Outputs](#5-outputs)
+ - [What kind of sequencing data can I include as input?](#what-kind-of-sequencing-data-can-I-include-as-input)
+ - [How do I find or generate appropriate reference trees for phylogenetic placement?](#how-do-i-find-or-generate-appropriate-reference-trees-for-phylogenetic-placement)
  - [References](#references)
 
 
@@ -59,7 +59,7 @@ snakemake -s Snakefile --cores all --use-conda --rerun-incomplete
 
 Every rule that needs a specific software environment declares its own `conda:` environment file (see `envs/`), so `--use-conda` builds each one automatically the first time it's needed - you do not need to create these environments by hand.
 
-### Folder set-up:
+### Folder setup:
 
 ```
 Snakemake/
