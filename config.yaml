@@ -40,11 +40,18 @@ project_settings:
 
 # Shared settings across all projects
 raw_data: "data/raw/"
+sra_cache: "cache/sra/"
+fasterq_temp: "work/fasterq/"
 output: "results/"
 visualization: "results/visualizations/"
 taxonomy_fasta: "reference/reference_database.qza"
 trained_ref_database: "reference/classifier.qza"
 REFFASTA: "reference/reference_database.qza"
+
+# 1 = Clade1 only
+# 2 = Clade1 and Clade2
+# 3 = Clade1, Clade2, and Clade3
+max_clade: 1
 
 # Eukaryote reference files
 EUK_TREE: "reference/euk_tree.tree"
