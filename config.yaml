@@ -1,4 +1,4 @@
-# Configuration for batch processing multiple SRA projects
+# Configuration file for Snakefile
 # Each project can have different primers, merge parameters, and trim lengths
 
 # List of projects to process
@@ -97,9 +97,6 @@ epa_filter_max: 100         # maximum number of placements per query sequence
 gappa_mass_norm: "absolute" # mass normalisation for heat-tree (absolute or relative)
 gappa_consensus_thresh: 0.7 # consensus threshold for taxonomic assignment
 edpl_threshold: 0.05        # maximum EDPL for high-confidence placements
-
-
-
 
 
 # Default settings (can be overridden per project)
