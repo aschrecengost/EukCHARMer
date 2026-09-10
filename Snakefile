@@ -15,6 +15,7 @@ REFFASTA = config["taxonomy_fasta"]
 CLASSIFIER = config["trained_ref_database"]
 SRA_CACHE = config["sra_cache"]
 FASTERQ_TEMP = config["fasterq_temp"]
+QIIME_ENV = config["qiime_environment"]
 
 # Merged paths
 MERGED = OUTPUT + "_merged/"
@@ -266,7 +267,7 @@ rule rename_files_import:
     log:
         OUTPUT + "{project}/logs/{project}_q2.log"
     conda:
-        "envs/qiime2-amplicon-2026.1.yaml"
+        QIIME_ENV
     shell:
         """
         if ls {input.rawreads}/*_1.fastq.gz 1>/dev/null 2>&1; then
@@ -293,7 +294,7 @@ rule rm_primers:
     log:
         OUTPUT + "{project}/logs/{project}_primer_q2.log"
     conda:
-        "envs/qiime2-amplicon-2026.1.yaml"
+        QIIME_ENV
     params:
         primerF = lambda wildcards: get_setting(wildcards, "primerF"),
         primerR = lambda wildcards: get_setting(wildcards, "primerR"),
@@ -325,7 +326,7 @@ rule merge:
     log:
         OUTPUT + "{project}/logs/{project}_merge_q2.log"
     conda:
-        "envs/qiime2-amplicon-2026.1.yaml"
+        QIIME_ENV
     params:
         max_diffs = lambda wildcards: get_setting(wildcards, "max_diffs_merge", 40),
         minovlen = lambda wildcards: get_setting(wildcards, "minovlen_merge", 40)
@@ -356,7 +357,7 @@ rule quality_filter:
     log:
         OUTPUT + "{project}/logs/{project}_filter_q2.log"
     conda:
-        "envs/qiime2-amplicon-2026.1.yaml"
+        QIIME_ENV
     params:
         min_quality = lambda wildcards: get_setting(wildcards, "filter_minquality", 20)
     shell:
@@ -390,7 +391,7 @@ rule deblur:
     log:
         OUTPUT + "{project}/logs/{project}-deblur.log"
     conda:
-        "envs/qiime2-amplicon-2026.1.yaml"
+        QIIME_ENV
     params:
         trim_length = lambda wildcards: get_setting(wildcards, "p_trim_length", 325)
     threads: 16
@@ -427,7 +428,7 @@ rule get_stats:
     log:
         OUTPUT + "{project}/logs/{project}_getviz_q2.log"
     conda:
-        "envs/qiime2-amplicon-2026.1.yaml"
+        QIIME_ENV
     shell:
         """
         mkdir -p $(dirname {log})
@@ -449,7 +450,7 @@ rule assign_tax:
     log:
         OUTPUT + "{project}/logs/{project}-sklearn_q2.log"
     conda:
-        "envs/qiime2-amplicon-2026.1.yaml"
+        QIIME_ENV
     shell:
         """
         mkdir -p $(dirname {log})
@@ -471,7 +472,7 @@ rule filter_table_taxa:
     params:
         include = config["p_include_taxa"]
     conda:
-        "envs/qiime2-amplicon-2026.1.yaml"
+        QIIME_ENV
     shell:
         """
         mkdir -p $(dirname {log})
@@ -503,7 +504,7 @@ rule filter_table_unassigned:
     params:
         include = config["p_include_unassigned"]
     conda:
-        "envs/qiime2-amplicon-2026.1.yaml"
+        QIIME_ENV
     shell:
         """
         mkdir -p $(dirname {log})
@@ -536,7 +537,7 @@ rule filter_seqs_taxa:
     params:
         include = config["p_include_taxa"]
     conda:
-        "envs/qiime2-amplicon-2026.1.yaml"
+        QIIME_ENV
     shell:
         """
         mkdir -p $(dirname {log})
@@ -568,7 +569,7 @@ rule filter_seqs_unassigned:
     params:
         include = config["p_include_unassigned"]
     conda:
-        "envs/qiime2-amplicon-2026.1.yaml"
+        QIIME_ENV
     shell:
         """
         mkdir -p $(dirname {log})
@@ -604,7 +605,7 @@ rule merge_filtered:
     log:
         MERGED + "logs/merge_filtered_q2.log"
     conda:
-        "envs/qiime2-amplicon-2026.1.yaml"
+        QIIME_ENV
     shell:
         """
         mkdir -p $(dirname {output.merged_Taxon_table})
@@ -636,7 +637,7 @@ rule merge_projects:
     log:
         MERGED + "logs/merge_projects_q2.log"
     conda:
-        "envs/qiime2-amplicon-2026.1.yaml"
+        QIIME_ENV
     shell:
         """
         mkdir -p $(dirname {output.merged_table})
@@ -664,7 +665,7 @@ rule export_Taxon:
     log:
         MERGED + "logs/export_Taxon_q2.log"
     conda:
-        "envs/qiime2-amplicon-2026.1.yaml"
+        QIIME_ENV
     params:
         table_outdir = MERGED + "export/table/",
         seqs_outdir = MERGED + "export/",
@@ -700,7 +701,7 @@ rule export_unassigned:
     log:
         MERGED + "logs/export_unassigned_q2.log"
     conda:
-        "envs/qiime2-amplicon-2026.1.yaml"
+        QIIME_ENV
     params:
         table_outdir = MERGED + "export/table/",
         seqs_outdir = MERGED + "export/",
@@ -735,7 +736,7 @@ rule export_taxonomy:
     params:
         outdir = MERGED + "export/"
     conda:
-        "envs/qiime2-amplicon-2026.1.yaml"
+        QIIME_ENV
     shell:
         """
         mkdir -p {params.outdir}
