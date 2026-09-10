@@ -1,6 +1,4 @@
 # Snakemake file - batch download and process multiple SRA studies
-## Modified for batch processing multiple projects
-## Original adapted from Sarah Hu https://forum.qiime2.org/t/qiime2-snakemake-workflow-tutorial-18s-16s-tag-sequencing/11334
 
 configfile: "config.yaml"
 
@@ -21,10 +19,10 @@ MERGED = OUTPUT + "_merged/"
 
 # Placements
 PLACEMENT        = OUTPUT + "_placement/"
-CIL_PLACEMENT    = OUTPUT + "_cil_placement/"
-APM_PLACEMENT    = OUTPUT + "_apm_placement/"
-PLAGIO_PLACEMENT = OUTPUT + "_plagio_placement/"
-SCUTI_PLACEMENT  = OUTPUT + "_scuti_placement/"
+TAXON_PLACEMENT    = OUTPUT + "_taxon_placement/"
+CLADE1_PLACEMENT    = OUTPUT + "_Clade1_placement/"
+CLADE2_PLACEMENT = OUTPUT + "_Clade2_placement/"
+CLADE3_PLACEMENT  = OUTPUT + "_Clade3_placement/"
 
 # R figure generation (phyloseq objects, taxa barplots, sample map)
 FIGURES = OUTPUT + "_figures/"
@@ -110,12 +108,12 @@ rule all:
         merged_seqs = MERGED + "merged-seqs.qza",
         merged_taxa = MERGED + "merged-taxa.qza",
 
-        # Ciliophora merged artifacts and exports
-        merged_cil_table = MERGED + "merged-ciliophora-table.qza",
-        merged_cil_seqs = MERGED + "merged-ciliophora-seqs.qza",
-        table_cil_biom = MERGED + "export/table/merged-ciliophora-table.biom",
-        table_cil_tsv = MERGED + "export/table/merged-ciliophora-table.tsv",
-        rep_seqs_cil_fasta = MERGED + "export/merged-ciliophora-seqs.fasta",
+        # Taxon merged artifacts and exports
+        merged_taxon_table = MERGED + "merged-taxon-table.qza",
+        merged_taxon_seqs = MERGED + "merged-taxon-seqs.qza",
+        table_taxon_biom = MERGED + "export/table/merged-taxon-table.biom",
+        table_taxon_tsv = MERGED + "export/table/merged-taxon-table.tsv",
+        rep_seqs_taxon_fasta = MERGED + "export/merged-taxon-seqs.fasta",
 
         # Unassigned merged artifacts and exports
         merged_unassigned_table = MERGED + "merged-unassigned-table.qza",
@@ -153,51 +151,51 @@ rule all:
         unassigned_edpl_histogram = PLACEMENT + "edpl_histogram.csv",
 
         # EUK placement filtering
-        per_query_ciliates = PLACEMENT + "per_query_ciliates.tsv",
-        filtered_euk_placements = PLACEMENT + "filtered_ciliate_LWR_EDPL.tsv",
-        unassigned_ciliates_fasta = PLACEMENT + "unassigned_ciliates.fasta",
+        per_query_taxon = PLACEMENT + "per_query_taxon.tsv",
+        filtered_euk_placements = PLACEMENT + "filtered_taxon_LWR_EDPL.tsv",
+        unassigned_taxon_fasta = PLACEMENT + "unassigned_taxon.fasta",
 
         # Taxa placement outputs
-        taxa_jplace = CIL_PLACEMENT + "epa_result.jplace",
-        taxa_heat_tree_svg = CIL_PLACEMENT + "tree.svg",
-        taxa_per_query = CIL_PLACEMENT + "per_query.tsv",
-        taxa_lwr_histogram = CIL_PLACEMENT + "lwr-histogram.csv",
-        taxa_edpl_histogram = CIL_PLACEMENT + "edpl_histogram.csv",
+        taxa_jplace = TAXON_PLACEMENT + "epa_result.jplace",
+        taxa_heat_tree_svg = TAXON_PLACEMENT + "tree.svg",
+        taxa_per_query = TAXON_PLACEMENT + "per_query.tsv",
+        taxa_lwr_histogram = TAXON_PLACEMENT + "lwr-histogram.csv",
+        taxa_edpl_histogram = TAXON_PLACEMENT + "edpl_histogram.csv",
 
         # Clade filtering
-        per_query_Clade1 = CIL_PLACEMENT + "per_query_Clade1.tsv",
-        per_query_Clade2 = CIL_PLACEMENT + "per_query_Clade2.tsv",
-        per_query_Clade3 = CIL_PLACEMENT + "per_query_Clade3.tsv",
-        filtered_Clade1 = CIL_PLACEMENT + "filtered_APM_LWR_EDPL.tsv",
-        filtered_Clade2 = CIL_PLACEMENT + "filtered_Plagio_LWR_EDPL.tsv",
-        filtered_Clade3 = CIL_PLACEMENT + "filtered_Scuti_LWR_EDPL.tsv",
+        per_query_Clade1 = TAXON_PLACEMENT + "per_query_Clade1.tsv",
+        per_query_Clade2 = TAXON_PLACEMENT + "per_query_Clade2.tsv",
+        per_query_Clade3 = taxon_PLACEMENT + "per_query_Clade3.tsv",
+        filtered_Clade1 = taxon_PLACEMENT + "filtered_Clade1_LWR_EDPL.tsv",
+        filtered_Clade2 = taxon_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv",
+        filtered_Clade3 = taxon_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv",
 
         # Clade1 placement outputs
-        Clade1_jplace = APM_PLACEMENT + "epa_result.jplace",
-        Clade1_heat_tree = APM_PLACEMENT + "tree.svg",
-        Clade1_per_query = APM_PLACEMENT + "per_query.tsv",
-        Clade1_lwr = APM_PLACEMENT + "lwr-histogram.csv",
-        Clade1_edpl = APM_PLACEMENT + "edpl_histogram.csv",
-        Clade1_filtered = APM_PLACEMENT + "filtered_APM_LWR_EDPL.tsv",
-        Clade1_placed_seqs = APM_PLACEMENT + "apm_placed_seqs.fasta",
+        Clade1_jplace = CLADE1_PLACEMENT + "epa_result.jplace",
+        Clade1_heat_tree = CLADE1_PLACEMENT + "tree.svg",
+        Clade1_per_query = CLADE1_PLACEMENT + "per_query.tsv",
+        Clade1_lwr = CLADE1_PLACEMENT + "lwr-histogram.csv",
+        Clade1_edpl = CLADE1_PLACEMENT + "edpl_histogram.csv",
+        Clade1_filtered = CLADE1_PLACEMENT + "filtered_CLADE1_LWR_EDPL.tsv",
+        Clade1_placed_seqs = CLADE1_PLACEMENT + "Clade1_placed_seqs.fasta",
 
         # Clade2 placement outputs
-        Clade2_jplace = PLAGIO_PLACEMENT + "epa_result.jplace",
-        Clade2_heat_tree = PLAGIO_PLACEMENT + "tree.svg",
-        Clade2_per_query = PLAGIO_PLACEMENT + "per_query.tsv",
-        Clade2_lwr = PLAGIO_PLACEMENT + "lwr-histogram.csv",
-        Clade2_edpl = PLAGIO_PLACEMENT + "edpl_histogram.csv",
-        Clade2_filtered = PLAGIO_PLACEMENT + "filtered_Plagio_LWR_EDPL.tsv",
-        Clade2_placed_seqs = PLAGIO_PLACEMENT + "plagio_placed_seqs.fasta",
+        Clade2_jplace = CLADE2_PLACEMENT + "epa_result.jplace",
+        Clade2_heat_tree = CLADE2_PLACEMENT + "tree.svg",
+        Clade2_per_query = CLADE2_PLACEMENT + "per_query.tsv",
+        Clade2_lwr = CLADE2_PLACEMENT + "lwr-histogram.csv",
+        Clade2_edpl = CLADE2_PLACEMENT + "edpl_histogram.csv",
+        Clade2_filtered = CLADE2_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv",
+        Clade2_placed_seqs = CLADE2_PLACEMENT + "Clade2_placed_seqs.fasta",
 
         # Clade3 placement outputs
-        Clade3_jplace = SCUTI_PLACEMENT + "epa_result.jplace",
-        Clade3_heat_tree = SCUTI_PLACEMENT + "tree.svg",
-        Clade3_per_query = SCUTI_PLACEMENT + "per_query.tsv",
-        Clade3_lwr = SCUTI_PLACEMENT + "lwr-histogram.csv",
-        Clade3_edpl = SCUTI_PLACEMENT + "edpl_histogram.csv",
-        Clade3_filtered = SCUTI_PLACEMENT + "filtered_Scuti_LWR_EDPL.tsv",
-        Clade3_placed_seqs = SCUTI_PLACEMENT + "scuti_placed_seqs.fasta",
+        Clade3_jplace = CLADE3_PLACEMENT + "epa_result.jplace",
+        Clade3_heat_tree = CLADE3_PLACEMENT + "tree.svg",
+        Clade3_per_query = CLADE3_PLACEMENT + "per_query.tsv",
+        Clade3_lwr = CLADE3_PLACEMENT + "lwr-histogram.csv",
+        Clade3_edpl = CLADE3_PLACEMENT + "edpl_histogram.csv",
+        Clade3_filtered = CLADE3_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv",
+        Clade3_placed_seqs = CLADE3_PLACEMENT + "Clade3_placed_seqs.fasta",
 
 
 rule download_runinfo:
@@ -579,13 +577,13 @@ rule filter_seqs_unassigned:
 
 rule merge_filtered:
     input:
-        tables_cil = expand(OUTPUT + "{project}/{project}-table-taxa.qza", project=PROJECTS),
-        seqs_cil = expand(OUTPUT + "{project}/{project}-rep-seqs-taxa.qza", project=PROJECTS),
+        tables_taxon = expand(OUTPUT + "{project}/{project}-table-taxa.qza", project=PROJECTS),
+        seqs_taxon = expand(OUTPUT + "{project}/{project}-rep-seqs-taxa.qza", project=PROJECTS),
         tables_unassigned = expand(OUTPUT + "{project}/{project}-table-unassigned.qza", project=PROJECTS),
         seqs_unassigned = expand(OUTPUT + "{project}/{project}-rep-seqs-unassigned.qza", project=PROJECTS)
     output:
-        merged_cil_table = MERGED + "merged-ciliophora-table.qza",
-        merged_cil_seqs = MERGED + "merged-ciliophora-seqs.qza",
+        merged_taxon_table = MERGED + "merged-taxon-table.qza",
+        merged_taxon_seqs = MERGED + "merged-taxon-seqs.qza",
         merged_unassigned_table = MERGED + "merged-unassigned-table.qza",
         merged_unassigned_seqs = MERGED + "merged-unassigned-seqs.qza"
     log:
@@ -594,14 +592,14 @@ rule merge_filtered:
         "envs/qiime2-amplicon-2026.1.yaml"
     shell:
         """
-        mkdir -p $(dirname {output.merged_cil_table})
+        mkdir -p $(dirname {output.merged_taxon_table})
         mkdir -p $(dirname {log})
         qiime feature-table merge \
-            --i-tables {input.tables_cil} \
-            --o-merged-table {output.merged_cil_table}
+            --i-tables {input.tables_taxon} \
+            --o-merged-table {output.merged_taxon_table}
         qiime feature-table merge-seqs \
-            --i-data {input.seqs_cil} \
-            --o-merged-data {output.merged_cil_seqs}
+            --i-data {input.seqs_taxon} \
+            --o-merged-data {output.merged_taxon_seqs}
         qiime feature-table merge \
             --i-tables {input.tables_unassigned} \
             --o-merged-table {output.merged_unassigned_table}
@@ -640,16 +638,16 @@ rule merge_projects:
         """
 
 
-rule export_ciliophora:
+rule export_taxon:
     input:
-        table_cil_merged = MERGED + "merged-ciliophora-table.qza",
-        rep_cil_merged = MERGED + "merged-ciliophora-seqs.qza"
+        table_taxon_merged = MERGED + "merged-taxon-table.qza",
+        rep_taxon_merged = MERGED + "merged-taxoniophora-seqs.qza"
     output:
-        table_cil_biom = MERGED + "export/table/merged-ciliophora-table.biom",
-        table_cil_tsv = MERGED + "export/table/merged-ciliophora-table.tsv",
-        rep_seqs_cil_fasta = MERGED + "export/merged-ciliophora-seqs.fasta"
+        table_taxon_biom = MERGED + "export/table/merged-taxon-table.biom",
+        table_taxon_tsv = MERGED + "export/table/merged-taxon-table.tsv",
+        rep_seqs_taxon_fasta = MERGED + "export/merged-taxon-seqs.fasta"
     log:
-        MERGED + "logs/export_ciliophora_q2.log"
+        MERGED + "logs/export_taxon_q2.log"
     conda:
         "envs/qiime2-amplicon-2026.1.yaml"
     params:
@@ -657,8 +655,8 @@ rule export_ciliophora:
         seqs_outdir = MERGED + "export/",
         # private temp dirs so a concurrently-running export_unassigned job can't
         # clobber our intermediate feature-table.biom / dna-sequences.fasta
-        table_tmpdir = MERGED + "export/table/.tmp_ciliophora/",
-        seqs_tmpdir = MERGED + "export/.tmp_ciliophora_seqs/"
+        table_tmpdir = MERGED + "export/table/.tmp_taxon/",
+        seqs_tmpdir = MERGED + "export/.tmp_taxon_seqs/"
     shell:
         """
         mkdir -p {params.table_outdir}
@@ -666,12 +664,12 @@ rule export_ciliophora:
         mkdir -p {params.table_tmpdir}
         mkdir -p {params.seqs_tmpdir}
         mkdir -p $(dirname {log})
-        qiime tools export --input-path {input.table_cil_merged} --output-path {params.table_tmpdir}
-        mv {params.table_tmpdir}feature-table.biom {output.table_cil_biom}
+        qiime tools export --input-path {input.table_taxon_merged} --output-path {params.table_tmpdir}
+        mv {params.table_tmpdir}feature-table.biom {output.table_taxon_biom}
         rmdir {params.table_tmpdir}
-        biom convert -i {output.table_cil_biom} -o {output.table_cil_tsv} --to-tsv
-        qiime tools export --input-path {input.rep_cil_merged} --output-path {params.seqs_tmpdir}
-        mv {params.seqs_tmpdir}dna-sequences.fasta {output.rep_seqs_cil_fasta}
+        biom convert -i {output.table_taxon_biom} -o {output.table_taxon_tsv} --to-tsv
+        qiime tools export --input-path {input.rep_taxon_merged} --output-path {params.seqs_tmpdir}
+        mv {params.seqs_tmpdir}dna-sequences.fasta {output.rep_seqs_taxon_fasta}
         rmdir {params.seqs_tmpdir}
         """
 
@@ -691,7 +689,7 @@ rule export_unassigned:
     params:
         table_outdir = MERGED + "export/table/",
         seqs_outdir = MERGED + "export/",
-        # private temp dirs so a concurrently-running export_ciliophora job can't
+        # private temp dirs so a concurrently-running export_taxon job can't
         # clobber our intermediate feature-table.biom / dna-sequences.fasta
         table_tmpdir = MERGED + "export/table/.tmp_unassigned/",
         seqs_tmpdir = MERGED + "export/.tmp_unassigned_seqs/"
@@ -1009,11 +1007,11 @@ rule gappa_lwr_edpl:
 
 # ---- EUK PLACEMENT FILTERING ----
 
-rule filter_ciliophora:
+rule filter_taxon:
     input:
         tsv = PLACEMENT + "per_query.tsv"
     output:
-        tsv = PLACEMENT + "per_query_ciliates.tsv"
+        tsv = PLACEMENT + "per_query_taxon.tsv"
     params:
         search_term = config["search_term_taxa"]
     conda:
@@ -1024,11 +1022,11 @@ rule filter_ciliophora:
 
 rule filter_euk_placements:
     input:
-        per_query = PLACEMENT + "per_query_ciliates.tsv",
+        per_query = PLACEMENT + "per_query_taxon.tsv",
         lwr_list  = PLACEMENT + "lwr-list.csv",
         edpl_list = PLACEMENT + "edpl_list.csv"
     output:
-        tsv = PLACEMENT + "filtered_ciliate_LWR_EDPL.tsv"
+        tsv = PLACEMENT + "filtered_taxon_LWR_EDPL.tsv"
     params:
         edpl_threshold = config["edpl_threshold"]
     conda:
@@ -1037,44 +1035,44 @@ rule filter_euk_placements:
         "scripts/filter_placements.py"
 
 
-rule extract_unassigned_ciliates:
+rule extract_unassigned_taxon:
     input:
-        tsv   = PLACEMENT + "filtered_ciliate_LWR_EDPL.tsv",
+        tsv   = PLACEMENT + "filtered_taxon_LWR_EDPL.tsv",
         fasta = MERGED + "export/merged-unassigned-seqs.fasta"
     output:
-        fasta = PLACEMENT + "unassigned_ciliates.fasta"
+        fasta = PLACEMENT + "unassigned_taxon.fasta"
     conda:
         "envs/pysradb.yaml"
     script:
         "scripts/extract_fasta.py"
 
 
-# ---- CILIATE PLACEMENT ----
+# ---- TAXON PLACEMENT ----
 
-rule combine_ciliate_seqs:
+rule combine_taxon_seqs:
     input:
-        unassigned_ciliates = PLACEMENT + "unassigned_ciliates.fasta",
-        asvs_ciliates       = MERGED + "export/merged-ciliophora-seqs.fasta"
+        unassigned_taxon = PLACEMENT + "unassigned_taxon.fasta",
+        asvs_taxon       = MERGED + "export/merged-taxon-seqs.fasta"
     output:
-        combined = CIL_PLACEMENT + "ciliate_seqs.fasta"
+        combined = TAXON_PLACEMENT + "taxon_seqs.fasta"
     shell:
         """
-        mkdir -p {CIL_PLACEMENT}
-        cat {input.unassigned_ciliates} {input.asvs_ciliates} > {output.combined}
+        mkdir -p {TAXON_PLACEMENT}
+        cat {input.unassigned_taxon} {input.asvs_taxon} > {output.combined}
         """
 
 
-rule papara_ciliate:
+rule papara_taxon:
     input:
-        ciliate_seqs = CIL_PLACEMENT + "ciliate_seqs.fasta",
-        cil_tree     = config["CIL_TREE"],
-        msa_phylip   = config["MSA_PHYLIP_CIL"],
-        msa_fasta    = config["MSA_FASTA_CIL"],
-        clades       = config["CLADES_CIL"]
+        taxon_seqs = TAXON_PLACEMENT + "taxon_seqs.fasta",
+        taxon_tree     = config["TAXON_TREE"],
+        msa_phylip   = config["MSA_PHYLIP_TAXON"],
+        msa_fasta    = config["MSA_FASTA_TAXON"],
+        clades       = config["CLADES_TAXON"]
     output:
-        papara_alignment = CIL_PLACEMENT + "papara_alignment.default"
+        papara_alignment = TAXON_PLACEMENT + "papara_alignment.default"
     params:
-        placement_dir = CIL_PLACEMENT
+        placement_dir = TAXON_PLACEMENT
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -1093,22 +1091,22 @@ rule papara_ciliate:
         papara \
             -t $(basename {input.cil_tree}) \
             -s $(basename {input.msa_phylip}) \
-            -q $(basename {input.ciliate_seqs}) \
+            -q $(basename {input.taxon_seqs}) \
             -j {threads} \
             -r
 
         """
 
 
-rule epa_split_ciliate:
+rule epa_split_taxon:
     input:
-        papara_alignment = CIL_PLACEMENT + "papara_alignment.default",
-        msa_fasta        = config["MSA_FASTA_CIL"]
+        papara_alignment = TAXON_PLACEMENT + "papara_alignment.default",
+        msa_fasta        = config["MSA_FASTA_TAXON"]
     output:
-        query_fasta = CIL_PLACEMENT + "query.fasta",
-        ref_fasta   = CIL_PLACEMENT + "reference.fasta"
+        query_fasta = TAXON_PLACEMENT + "query.fasta",
+        ref_fasta   = TAXON_PLACEMENT + "reference.fasta"
     params:
-        placement_dir = CIL_PLACEMENT
+        placement_dir = TAXON_PLACEMENT
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -1126,18 +1124,18 @@ rule epa_split_ciliate:
         """
 
 
-rule raxml_evaluate_ciliate:
+rule raxml_evaluate_taxon:
     input:
-        ref_fasta = CIL_PLACEMENT + "reference.fasta",
-        cil_tree  = config["CIL_TREE"]
+        ref_fasta = TAXON_PLACEMENT + "reference.fasta",
+        cil_tree  = config["TAXON_TREE"]
     output:
-        best_model = CIL_PLACEMENT + "reference.fasta.raxml.bestModel",
-        best_tree  = CIL_PLACEMENT + "reference.fasta.raxml.bestTree",
-        log        = CIL_PLACEMENT + "reference.fasta.raxml.log",
-        rba        = CIL_PLACEMENT + "reference.fasta.raxml.rba",
-        start_tree = CIL_PLACEMENT + "reference.fasta.raxml.startTree"
+        best_model = TAXON_PLACEMENT + "reference.fasta.raxml.bestModel",
+        best_tree  = TAXON_PLACEMENT + "reference.fasta.raxml.bestTree",
+        log        = TAXON_PLACEMENT + "reference.fasta.raxml.log",
+        rba        = TAXON_PLACEMENT + "reference.fasta.raxml.rba",
+        start_tree = TAXON_PLACEMENT + "reference.fasta.raxml.startTree"
     params:
-        placement_dir = CIL_PLACEMENT
+        placement_dir = TAXON_PLACEMENT
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -1158,17 +1156,17 @@ rule raxml_evaluate_ciliate:
         """
 
 
-rule epa_placement_ciliate:
+rule epa_placement_taxon:
     input:
-        cil_tree   = config["CIL_TREE"],
-        ref_fasta  = CIL_PLACEMENT + "reference.fasta",
-        query_fasta = CIL_PLACEMENT + "query.fasta",
-        best_model = CIL_PLACEMENT + "reference.fasta.raxml.bestModel"
+        cil_tree   = config["TAXON_TREE"],
+        ref_fasta  = TAXON_PLACEMENT + "reference.fasta",
+        query_fasta = TAXON_PLACEMENT + "query.fasta",
+        best_model = TAXON_PLACEMENT + "reference.fasta.raxml.bestModel"
     output:
-        jplace   = CIL_PLACEMENT + "epa_result.jplace",
-        info_log = CIL_PLACEMENT + "epa_info.log"
+        jplace   = TAXON_PLACEMENT + "epa_result.jplace",
+        info_log = TAXON_PLACEMENT + "epa_info.log"
     params:
-        placement_dir   = CIL_PLACEMENT,
+        placement_dir   = TAXON_PLACEMENT,
         filter_acc_lwr  = config["epa_filter_acc_lwr"],
         filter_max      = config["epa_filter_max"]
     threads: 17
@@ -1195,15 +1193,15 @@ rule epa_placement_ciliate:
         """
 
 
-rule gappa_heat_tree_ciliate:
+rule gappa_heat_tree_taxon:
     input:
-        jplace = CIL_PLACEMENT + "epa_result.jplace"
+        jplace = TAXON_PLACEMENT + "epa_result.jplace"
     output:
-        svg    = CIL_PLACEMENT + "tree.svg",
-        newick = CIL_PLACEMENT + "tree.newick",
-        nexus  = CIL_PLACEMENT + "tree.nexus"
+        svg    = TAXON_PLACEMENT + "tree.svg",
+        newick = TAXON_PLACEMENT + "tree.newick",
+        nexus  = TAXON_PLACEMENT + "tree.nexus"
     params:
-        placement_dir = CIL_PLACEMENT,
+        placement_dir = TAXON_PLACEMENT,
         mass_norm   = config["gappa_mass_norm"]
     conda:
         "envs/phylo_placement.yaml"
@@ -1224,16 +1222,16 @@ rule gappa_heat_tree_ciliate:
         """
 
 
-rule gappa_assign_ciliate:
+rule gappa_assign_taxon:
     input:
-        jplace = CIL_PLACEMENT + "epa_result.jplace",
-        clades = config["CLADES_CIL"]
+        jplace = TAXON_PLACEMENT + "epa_result.jplace",
+        clades = config["CLADES_TAXON"]
     output:
-        per_query    = CIL_PLACEMENT + "per_query.tsv",
-        profile      = CIL_PLACEMENT + "profile.tsv",
-        labelled_tree = CIL_PLACEMENT + "labelled_tree.newick"
+        per_query    = TAXON_PLACEMENT + "per_query.tsv",
+        profile      = TAXON_PLACEMENT + "profile.tsv",
+        labelled_tree = TAXON_PLACEMENT + "labelled_tree.newick"
     params:
-        placement_dir = CIL_PLACEMENT,
+        placement_dir = TAXON_PLACEMENT,
         consensus_thresh  = config["gappa_consensus_thresh"]
     conda:
         "envs/phylo_placement.yaml"
@@ -1255,16 +1253,16 @@ rule gappa_assign_ciliate:
         """
 
 
-rule gappa_lwr_edpl_ciliate:
+rule gappa_lwr_edpl_taxon:
     input:
-        jplace = CIL_PLACEMENT + "epa_result.jplace"
+        jplace = TAXON_PLACEMENT + "epa_result.jplace"
     output:
-        lwr_histogram  = CIL_PLACEMENT + "lwr-histogram.csv",
-        lwr_list       = CIL_PLACEMENT + "lwr-list.csv",
-        edpl_histogram = CIL_PLACEMENT + "edpl_histogram.csv",
-        edpl_list      = CIL_PLACEMENT + "edpl_list.csv"
+        lwr_histogram  = TAXON_PLACEMENT + "lwr-histogram.csv",
+        lwr_list       = TAXON_PLACEMENT + "lwr-list.csv",
+        edpl_histogram = TAXON_PLACEMENT + "edpl_histogram.csv",
+        edpl_list      = TAXON_PLACEMENT + "edpl_list.csv"
     params:
-        placement_dir = CIL_PLACEMENT,
+        placement_dir = TAXON_PLACEMENT,
     conda:
         "envs/phylo_placement.yaml"
     shell:
@@ -1292,9 +1290,9 @@ rule gappa_lwr_edpl_ciliate:
 
 rule filter_Clade1:
     input:
-        tsv = CIL_PLACEMENT + "per_query.tsv"
+        tsv = TAXON_PLACEMENT + "per_query.tsv"
     output:
-        tsv = CIL_PLACEMENT + "per_query_Clade1.tsv"
+        tsv = TAXON_PLACEMENT + "per_query_Clade1.tsv"
     params:
         search_term = config["search_term_clade1"]
     conda:
@@ -1305,9 +1303,9 @@ rule filter_Clade1:
 
 rule filter_Clade2:
     input:
-        tsv = CIL_PLACEMENT + "per_query.tsv"
+        tsv = TAXON_PLACEMENT + "per_query.tsv"
     output:
-        tsv = CIL_PLACEMENT + "per_query_Clade2.tsv"
+        tsv = TAXON_PLACEMENT + "per_query_Clade2.tsv"
     params:
         search_term = config["search_term_clade2"]
     conda:
@@ -1318,9 +1316,9 @@ rule filter_Clade2:
 
 rule filter_Clade3:
     input:
-        tsv = CIL_PLACEMENT + "per_query.tsv"
+        tsv = TAXON_PLACEMENT + "per_query.tsv"
     output:
-        tsv = CIL_PLACEMENT + "per_query_Clade3.tsv"
+        tsv = TAXON_PLACEMENT + "per_query_Clade3.tsv"
     params:
         search_term = config["search_term_clade3"]
     conda:
@@ -1329,13 +1327,13 @@ rule filter_Clade3:
         "scripts/filter_by_taxopath.py"
 
 
-rule filter_APM_placements:
+rule filter_CLADE1_placements:
     input:
-        per_query = CIL_PLACEMENT + "per_query_Clade1.tsv",
-        lwr_list  = CIL_PLACEMENT + "lwr-list.csv",
-        edpl_list = CIL_PLACEMENT + "edpl_list.csv"
+        per_query = TAXON_PLACEMENT + "per_query_Clade1.tsv",
+        lwr_list  = TAXON_PLACEMENT + "lwr-list.csv",
+        edpl_list = TAXON_PLACEMENT + "edpl_list.csv"
     output:
-        tsv = CIL_PLACEMENT + "filtered_APM_LWR_EDPL.tsv"
+        tsv = TAXON_PLACEMENT + "filtered_CLADE1_LWR_EDPL.tsv"
     params:
         edpl_threshold = config["edpl_threshold"]
     conda:
@@ -1344,13 +1342,13 @@ rule filter_APM_placements:
         "scripts/filter_placements.py"
 
 
-rule filter_Plagio_placements:
+rule filter_Clade2_placements:
     input:
-        per_query = CIL_PLACEMENT + "per_query_Clade2.tsv",
-        lwr_list  = CIL_PLACEMENT + "lwr-list.csv",
-        edpl_list = CIL_PLACEMENT + "edpl_list.csv"
+        per_query = TAXON_PLACEMENT + "per_query_Clade2.tsv",
+        lwr_list  = TAXON_PLACEMENT + "lwr-list.csv",
+        edpl_list = TAXON_PLACEMENT + "edpl_list.csv"
     output:
-        tsv = CIL_PLACEMENT + "filtered_Plagio_LWR_EDPL.tsv"
+        tsv = TAXON_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv"
     params:
         edpl_threshold = config["edpl_threshold"]
     conda:
@@ -1359,13 +1357,13 @@ rule filter_Plagio_placements:
         "scripts/filter_placements.py"
 
 
-rule filter_Scuti_placements:
+rule filter_Clade3_placements:
     input:
-        per_query = CIL_PLACEMENT + "per_query_Clade3.tsv",
-        lwr_list  = CIL_PLACEMENT + "lwr-list.csv",
-        edpl_list = CIL_PLACEMENT + "edpl_list.csv"
+        per_query = TAXON_PLACEMENT + "per_query_Clade3.tsv",
+        lwr_list  = TAXON_PLACEMENT + "lwr-list.csv",
+        edpl_list = TAXON_PLACEMENT + "edpl_list.csv"
     output:
-        tsv = CIL_PLACEMENT + "filtered_Scuti_LWR_EDPL.tsv"
+        tsv = TAXON_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv"
     params:
         edpl_threshold = config["edpl_threshold"]
     conda:
@@ -1374,31 +1372,31 @@ rule filter_Scuti_placements:
         "scripts/filter_placements.py"
 
 
-# ---- APM PLACEMENT ----
+# ---- CLADE1 PLACEMENT ----
 
-rule extract_apm_seqs:
+rule extract_Clade1_seqs:
     input:
-        tsv   = CIL_PLACEMENT + "filtered_APM_LWR_EDPL.tsv",
-        fasta = CIL_PLACEMENT + "ciliate_seqs.fasta"
+        tsv   = TAXON_PLACEMENT + "filtered_CLADE1_LWR_EDPL.tsv",
+        fasta = TAXON_PLACEMENT + "taxon_seqs.fasta"
     output:
-        fasta = APM_PLACEMENT + "apm_seqs.fasta"
+        fasta = CLADE1_PLACEMENT + "Clade1_seqs.fasta"
     conda:
         "envs/pysradb.yaml"
     script:
         "scripts/extract_fasta.py"
 
 
-rule papara_apm:
+rule papara_Clade1:
     input:
-        query_seqs = APM_PLACEMENT + "apm_seqs.fasta",
-        tree       = config["APM_TREE"],
-        msa_phylip = config["MSA_PHYLIP_APM"],
-        msa_fasta  = config["MSA_FASTA_APM"],
-        clades     = config["CLADES_APM"]
+        query_seqs = CLADE1_PLACEMENT + "Clade1_seqs.fasta",
+        tree       = config["CLADE1_TREE"],
+        msa_phylip = config["MSA_PHYLIP_CLADE1"],
+        msa_fasta  = config["MSA_FASTA_CLADE1"],
+        clades     = config["CLADES_CLADE1"]
     output:
-        papara_alignment = APM_PLACEMENT + "papara_alignment.default"
+        papara_alignment = CLADE1_PLACEMENT + "papara_alignment.default"
     params:
-        placement_dir = APM_PLACEMENT
+        placement_dir = CLADE1_PLACEMENT
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -1424,15 +1422,15 @@ rule papara_apm:
         """
 
 
-rule epa_split_apm:
+rule epa_split_Clade1:
     input:
-        papara_alignment = APM_PLACEMENT + "papara_alignment.default",
-        msa_fasta        = config["MSA_FASTA_APM"]
+        papara_alignment = CLADE1_PLACEMENT + "papara_alignment.default",
+        msa_fasta        = config["MSA_FASTA_CLADE1"]
     output:
-        query_fasta = APM_PLACEMENT + "query.fasta",
-        ref_fasta   = APM_PLACEMENT + "reference.fasta"
+        query_fasta = CLADE1_PLACEMENT + "query.fasta",
+        ref_fasta   = CLADE1_PLACEMENT + "reference.fasta"
     params:
-        placement_dir = APM_PLACEMENT
+        placement_dir = CLADE1_PLACEMENT
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -1450,18 +1448,18 @@ rule epa_split_apm:
         """
 
 
-rule raxml_evaluate_apm:
+rule raxml_evaluate_Clade1:
     input:
-        ref_fasta = APM_PLACEMENT + "reference.fasta",
-        tree      = config["APM_TREE"]
+        ref_fasta = CLADE1_PLACEMENT + "reference.fasta",
+        tree      = config["CLADE1_TREE"]
     output:
-        best_model = APM_PLACEMENT + "reference.fasta.raxml.bestModel",
-        best_tree  = APM_PLACEMENT + "reference.fasta.raxml.bestTree",
-        log        = APM_PLACEMENT + "reference.fasta.raxml.log",
-        rba        = APM_PLACEMENT + "reference.fasta.raxml.rba",
-        start_tree = APM_PLACEMENT + "reference.fasta.raxml.startTree"
+        best_model = CLADE1_PLACEMENT + "reference.fasta.raxml.bestModel",
+        best_tree  = CLADE1_PLACEMENT + "reference.fasta.raxml.bestTree",
+        log        = CLADE1_PLACEMENT + "reference.fasta.raxml.log",
+        rba        = CLADE1_PLACEMENT + "reference.fasta.raxml.rba",
+        start_tree = CLADE1_PLACEMENT + "reference.fasta.raxml.startTree"
     params:
-        placement_dir = APM_PLACEMENT
+        placement_dir = CLADE1_PLACEMENT
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -1482,17 +1480,17 @@ rule raxml_evaluate_apm:
         """
 
 
-rule epa_placement_apm:
+rule epa_placement_Clade1:
     input:
-        tree        = config["APM_TREE"],
-        ref_fasta   = APM_PLACEMENT + "reference.fasta",
-        query_fasta = APM_PLACEMENT + "query.fasta",
-        best_model  = APM_PLACEMENT + "reference.fasta.raxml.bestModel"
+        tree        = config["CLADE1_TREE"],
+        ref_fasta   = CLADE1_PLACEMENT + "reference.fasta",
+        query_fasta = CLADE1_PLACEMENT + "query.fasta",
+        best_model  = CLADE1_PLACEMENT + "reference.fasta.raxml.bestModel"
     output:
-        jplace   = APM_PLACEMENT + "epa_result.jplace",
-        info_log = APM_PLACEMENT + "epa_info.log"
+        jplace   = CLADE1_PLACEMENT + "epa_result.jplace",
+        info_log = CLADE1_PLACEMENT + "epa_info.log"
     params:
-        placement_dir = APM_PLACEMENT,
+        placement_dir = CLADE1_PLACEMENT,
         filter_acc_lwr = config["epa_filter_acc_lwr"],
         filter_max     = config["epa_filter_max"]
     threads: 17
@@ -1518,15 +1516,15 @@ rule epa_placement_apm:
         """
 
 
-rule gappa_heat_tree_apm:
+rule gappa_heat_tree_Clade1:
     input:
-        jplace = APM_PLACEMENT + "epa_result.jplace"
+        jplace = CLADE1_PLACEMENT + "epa_result.jplace"
     output:
-        svg    = APM_PLACEMENT + "tree.svg",
-        newick = APM_PLACEMENT + "tree.newick",
-        nexus  = APM_PLACEMENT + "tree.nexus"
+        svg    = CLADE1_PLACEMENT + "tree.svg",
+        newick = CLADE1_PLACEMENT + "tree.newick",
+        nexus  = CLADE1_PLACEMENT + "tree.nexus"
     params:
-        placement_dir = APM_PLACEMENT,
+        placement_dir = CLADE1_PLACEMENT,
         mass_norm   = config["gappa_mass_norm"]
     conda:
         "envs/phylo_placement.yaml"
@@ -1547,16 +1545,16 @@ rule gappa_heat_tree_apm:
         """
 
 
-rule gappa_assign_apm:
+rule gappa_assign_Clade1:
     input:
-        jplace = APM_PLACEMENT + "epa_result.jplace",
-        clades = config["CLADES_APM"]
+        jplace = CLADE1_PLACEMENT + "epa_result.jplace",
+        clades = config["CLADES_CLADE1"]
     output:
-        per_query     = APM_PLACEMENT + "per_query.tsv",
-        profile       = APM_PLACEMENT + "profile.tsv",
-        labelled_tree = APM_PLACEMENT + "labelled_tree.newick"
+        per_query     = CLADE1_PLACEMENT + "per_query.tsv",
+        profile       = CLADE1_PLACEMENT + "profile.tsv",
+        labelled_tree = CLADE1_PLACEMENT + "labelled_tree.newick"
     params:
-        placement_dir = APM_PLACEMENT,
+        placement_dir = CLADE1_PLACEMENT,
         consensus_thresh = config["gappa_consensus_thresh"]
     conda:
         "envs/phylo_placement.yaml"
@@ -1578,16 +1576,16 @@ rule gappa_assign_apm:
         """
 
 
-rule gappa_lwr_edpl_apm:
+rule gappa_lwr_edpl_Clade1:
     input:
-        jplace = APM_PLACEMENT + "epa_result.jplace"
+        jplace = CLADE1_PLACEMENT + "epa_result.jplace"
     output:
-        lwr_histogram  = APM_PLACEMENT + "lwr-histogram.csv",
-        lwr_list       = APM_PLACEMENT + "lwr-list.csv",
-        edpl_histogram = APM_PLACEMENT + "edpl_histogram.csv",
-        edpl_list      = APM_PLACEMENT + "edpl_list.csv"
+        lwr_histogram  = CLADE1_PLACEMENT + "lwr-histogram.csv",
+        lwr_list       = CLADE1_PLACEMENT + "lwr-list.csv",
+        edpl_histogram = CLADE1_PLACEMENT + "edpl_histogram.csv",
+        edpl_list      = CLADE1_PLACEMENT + "edpl_list.csv"
     params:
-        placement_dir = APM_PLACEMENT,
+        placement_dir = CLADE1_PLACEMENT,
     conda:
         "envs/phylo_placement.yaml"
     shell:
@@ -1611,16 +1609,15 @@ rule gappa_lwr_edpl_apm:
         """
 
 
-# ---- APM PLACEMENT FILTERING (replicates filter_euk_placements / extract_unassigned_ciliates
-#      on the APM tree's own placement results) ----
+# ---- CLADE1 PLACEMENT FILTERING
 
-rule filter_apm_final:
+rule filter_Clade1_final:
     input:
-        per_query = APM_PLACEMENT + "per_query.tsv",
-        lwr_list  = APM_PLACEMENT + "lwr-list.csv",
-        edpl_list = APM_PLACEMENT + "edpl_list.csv"
+        per_query = CLADE1_PLACEMENT + "per_query.tsv",
+        lwr_list  = CLADE1_PLACEMENT + "lwr-list.csv",
+        edpl_list = CLADE1_PLACEMENT + "edpl_list.csv"
     output:
-        tsv = APM_PLACEMENT + "filtered_APM_LWR_EDPL.tsv"
+        tsv = CLADE1_PLACEMENT + "filtered_CLADE1_LWR_EDPL.tsv"
     params:
         edpl_threshold = config["edpl_threshold"]
     conda:
@@ -1629,43 +1626,43 @@ rule filter_apm_final:
         "scripts/filter_placements.py"
 
 
-rule extract_apm_final_seqs:
+rule extract_Clade1_final_seqs:
     input:
-        tsv   = APM_PLACEMENT + "filtered_APM_LWR_EDPL.tsv",
-        fasta = APM_PLACEMENT + "apm_seqs.fasta"
+        tsv   = CLADE1_PLACEMENT + "filtered_CLADE1_LWR_EDPL.tsv",
+        fasta = CLADE1_PLACEMENT + "Clade1_seqs.fasta"
     output:
-        fasta = APM_PLACEMENT + "apm_placed_seqs.fasta"
+        fasta = CLADE1_PLACEMENT + "Clade1_placed_seqs.fasta"
     conda:
         "envs/pysradb.yaml"
     script:
         "scripts/extract_fasta.py"
 
 
-# ---- PLAGIOPYLEA PLACEMENT ----
+# ---- CLADE 2 PLACEMENT ----
 
-rule extract_plagio_seqs:
+rule extract_Clade2_seqs:
     input:
-        tsv   = CIL_PLACEMENT + "filtered_Plagio_LWR_EDPL.tsv",
-        fasta = CIL_PLACEMENT + "ciliate_seqs.fasta"
+        tsv   = TAXON_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv",
+        fasta = TAXON_PLACEMENT + "taxon_seqs.fasta"
     output:
-        fasta = PLAGIO_PLACEMENT + "plagio_seqs.fasta"
+        fasta = CLADE2_PLACEMENT + "Clade2_seqs.fasta"
     conda:
         "envs/pysradb.yaml"
     script:
         "scripts/extract_fasta.py"
 
 
-rule papara_plagio:
+rule papara_Clade2:
     input:
-        query_seqs = PLAGIO_PLACEMENT + "plagio_seqs.fasta",
-        tree       = config["PLAGIO_TREE"],
-        msa_phylip = config["MSA_PHYLIP_PLAGIO"],
-        msa_fasta  = config["MSA_FASTA_PLAGIO"],
-        clades     = config["CLADES_PLAGIO"]
+        query_seqs = CLADE2_PLACEMENT + "Clade2_seqs.fasta",
+        tree       = config["CLADE2_TREE"],
+        msa_phylip = config["MSA_PHYLIP_CLADE2"],
+        msa_fasta  = config["MSA_FASTA_CLADE2"],
+        clades     = config["CLADES_CLADE2"]
     output:
-        papara_alignment = PLAGIO_PLACEMENT + "papara_alignment.default"
+        papara_alignment = CLADE2_PLACEMENT + "papara_alignment.default"
     params:
-        placement_dir = PLAGIO_PLACEMENT
+        placement_dir = CLADE2_PLACEMENT
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -1691,15 +1688,15 @@ rule papara_plagio:
         """
 
 
-rule epa_split_plagio:
+rule epa_split_Clade2:
     input:
-        papara_alignment = PLAGIO_PLACEMENT + "papara_alignment.default",
-        msa_fasta        = config["MSA_FASTA_PLAGIO"]
+        papara_alignment = CLADE2_PLACEMENT + "papara_alignment.default",
+        msa_fasta        = config["MSA_FASTA_CLADE2"]
     output:
-        query_fasta = PLAGIO_PLACEMENT + "query.fasta",
-        ref_fasta   = PLAGIO_PLACEMENT + "reference.fasta"
+        query_fasta = CLADE2_PLACEMENT + "query.fasta",
+        ref_fasta   = CLADE2_PLACEMENT + "reference.fasta"
     params:
-        placement_dir = PLAGIO_PLACEMENT
+        placement_dir = CLADE2_PLACEMENT
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -1717,18 +1714,18 @@ rule epa_split_plagio:
         """
 
 
-rule raxml_evaluate_plagio:
+rule raxml_evaluate_Clade2:
     input:
-        ref_fasta = PLAGIO_PLACEMENT + "reference.fasta",
-        tree      = config["PLAGIO_TREE"]
+        ref_fasta = CLADE2_PLACEMENT + "reference.fasta",
+        tree      = config["CLADE2_TREE"]
     output:
-        best_model = PLAGIO_PLACEMENT + "reference.fasta.raxml.bestModel",
-        best_tree  = PLAGIO_PLACEMENT + "reference.fasta.raxml.bestTree",
-        log        = PLAGIO_PLACEMENT + "reference.fasta.raxml.log",
-        rba        = PLAGIO_PLACEMENT + "reference.fasta.raxml.rba",
-        start_tree = PLAGIO_PLACEMENT + "reference.fasta.raxml.startTree"
+        best_model = CLADE2_PLACEMENT + "reference.fasta.raxml.bestModel",
+        best_tree  = CLADE2_PLACEMENT + "reference.fasta.raxml.bestTree",
+        log        = CLADE2_PLACEMENT + "reference.fasta.raxml.log",
+        rba        = CLADE2_PLACEMENT + "reference.fasta.raxml.rba",
+        start_tree = CLADE2_PLACEMENT + "reference.fasta.raxml.startTree"
     params:
-        placement_dir = PLAGIO_PLACEMENT
+        placement_dir = CLADE2_PLACEMENT
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -1749,17 +1746,17 @@ rule raxml_evaluate_plagio:
         """
 
 
-rule epa_placement_plagio:
+rule epa_placement_Clade2:
     input:
-        tree        = config["PLAGIO_TREE"],
-        ref_fasta   = PLAGIO_PLACEMENT + "reference.fasta",
-        query_fasta = PLAGIO_PLACEMENT + "query.fasta",
-        best_model  = PLAGIO_PLACEMENT + "reference.fasta.raxml.bestModel"
+        tree        = config["CLADE2_TREE"],
+        ref_fasta   = CLADE2_PLACEMENT + "reference.fasta",
+        query_fasta = CLADE2_PLACEMENT + "query.fasta",
+        best_model  = CLADE2_PLACEMENT + "reference.fasta.raxml.bestModel"
     output:
-        jplace   = PLAGIO_PLACEMENT + "epa_result.jplace",
-        info_log = PLAGIO_PLACEMENT + "epa_info.log"
+        jplace   = CLADE2_PLACEMENT + "epa_result.jplace",
+        info_log = CLADE2_PLACEMENT + "epa_info.log"
     params:
-        placement_dir = PLAGIO_PLACEMENT,
+        placement_dir = CLADE2_PLACEMENT,
         filter_acc_lwr = config["epa_filter_acc_lwr"],
         filter_max     = config["epa_filter_max"]
     threads: 17
@@ -1785,15 +1782,15 @@ rule epa_placement_plagio:
         """
 
 
-rule gappa_heat_tree_plagio:
+rule gappa_heat_tree_Clade2:
     input:
-        jplace = PLAGIO_PLACEMENT + "epa_result.jplace"
+        jplace = CLADE2_PLACEMENT + "epa_result.jplace"
     output:
-        svg    = PLAGIO_PLACEMENT + "tree.svg",
-        newick = PLAGIO_PLACEMENT + "tree.newick",
-        nexus  = PLAGIO_PLACEMENT + "tree.nexus"
+        svg    = CLADE2_PLACEMENT + "tree.svg",
+        newick = CLADE2_PLACEMENT + "tree.newick",
+        nexus  = CLADE2_PLACEMENT + "tree.nexus"
     params:
-        placement_dir = PLAGIO_PLACEMENT,
+        placement_dir = CLADE2_PLACEMENT,
         mass_norm   = config["gappa_mass_norm"]
     conda:
         "envs/phylo_placement.yaml"
@@ -1814,16 +1811,16 @@ rule gappa_heat_tree_plagio:
         """
 
 
-rule gappa_assign_plagio:
+rule gappa_assign_Clade2:
     input:
-        jplace = PLAGIO_PLACEMENT + "epa_result.jplace",
-        clades = config["CLADES_PLAGIO"]
+        jplace = CLADE2_PLACEMENT + "epa_result.jplace",
+        clades = config["CLADES_CLADE2"]
     output:
-        per_query     = PLAGIO_PLACEMENT + "per_query.tsv",
-        profile       = PLAGIO_PLACEMENT + "profile.tsv",
-        labelled_tree = PLAGIO_PLACEMENT + "labelled_tree.newick"
+        per_query     = CLADE2_PLACEMENT + "per_query.tsv",
+        profile       = CLADE2_PLACEMENT + "profile.tsv",
+        labelled_tree = CLADE2_PLACEMENT + "labelled_tree.newick"
     params:
-        placement_dir = PLAGIO_PLACEMENT,
+        placement_dir = CLADE2_PLACEMENT,
         consensus_thresh = config["gappa_consensus_thresh"]
     conda:
         "envs/phylo_placement.yaml"
@@ -1845,16 +1842,16 @@ rule gappa_assign_plagio:
         """
 
 
-rule gappa_lwr_edpl_plagio:
+rule gappa_lwr_edpl_Clade2:
     input:
-        jplace = PLAGIO_PLACEMENT + "epa_result.jplace"
+        jplace = CLADE2_PLACEMENT + "epa_result.jplace"
     output:
-        lwr_histogram  = PLAGIO_PLACEMENT + "lwr-histogram.csv",
-        lwr_list       = PLAGIO_PLACEMENT + "lwr-list.csv",
-        edpl_histogram = PLAGIO_PLACEMENT + "edpl_histogram.csv",
-        edpl_list      = PLAGIO_PLACEMENT + "edpl_list.csv"
+        lwr_histogram  = CLADE2_PLACEMENT + "lwr-histogram.csv",
+        lwr_list       = CLADE2_PLACEMENT + "lwr-list.csv",
+        edpl_histogram = CLADE2_PLACEMENT + "edpl_histogram.csv",
+        edpl_list      = CLADE2_PLACEMENT + "edpl_list.csv"
     params:
-        placement_dir = PLAGIO_PLACEMENT,
+        placement_dir = CLADE2_PLACEMENT,
     conda:
         "envs/phylo_placement.yaml"
     shell:
@@ -1878,16 +1875,15 @@ rule gappa_lwr_edpl_plagio:
         """
 
 
-# ---- PLAGIOPYLEA PLACEMENT FILTERING (replicates filter_euk_placements / extract_unassigned_ciliates
-#      on the Plagiopylea tree's own placement results) ----
+# ---- CLADE 2 PLACEMENT FILTERING
 
-rule filter_plagio_final:
+rule filter_Clade2_final:
     input:
-        per_query = PLAGIO_PLACEMENT + "per_query.tsv",
-        lwr_list  = PLAGIO_PLACEMENT + "lwr-list.csv",
-        edpl_list = PLAGIO_PLACEMENT + "edpl_list.csv"
+        per_query = CLADE2_PLACEMENT + "per_query.tsv",
+        lwr_list  = CLADE2_PLACEMENT + "lwr-list.csv",
+        edpl_list = CLADE2_PLACEMENT + "edpl_list.csv"
     output:
-        tsv = PLAGIO_PLACEMENT + "filtered_Plagio_LWR_EDPL.tsv"
+        tsv = CLADE2_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv"
     params:
         edpl_threshold = config["edpl_threshold"]
     conda:
@@ -1896,43 +1892,43 @@ rule filter_plagio_final:
         "scripts/filter_placements.py"
 
 
-rule extract_plagio_final_seqs:
+rule extract_Clade2_final_seqs:
     input:
-        tsv   = PLAGIO_PLACEMENT + "filtered_Plagio_LWR_EDPL.tsv",
-        fasta = PLAGIO_PLACEMENT + "plagio_seqs.fasta"
+        tsv   = CLADE2_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv",
+        fasta = CLADE2_PLACEMENT + "Clade2_seqs.fasta"
     output:
-        fasta = PLAGIO_PLACEMENT + "plagio_placed_seqs.fasta"
+        fasta = CLADE2_PLACEMENT + "Clade2_placed_seqs.fasta"
     conda:
         "envs/pysradb.yaml"
     script:
         "scripts/extract_fasta.py"
 
 
-# ---- SCUTI PLACEMENT ----
+# ---- CLADE 3 PLACEMENT ----
 
-rule extract_scuti_seqs:
+rule extract_Clade3_seqs:
     input:
-        tsv   = CIL_PLACEMENT + "filtered_Scuti_LWR_EDPL.tsv",
-        fasta = CIL_PLACEMENT + "ciliate_seqs.fasta"
+        tsv   = TAXON_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv",
+        fasta = TAXON_PLACEMENT + "taxon_seqs.fasta"
     output:
-        fasta = SCUTI_PLACEMENT + "scuti_seqs.fasta"
+        fasta = CLADE3_PLACEMENT + "Clade3_seqs.fasta"
     conda:
         "envs/pysradb.yaml"
     script:
         "scripts/extract_fasta.py"
 
 
-rule papara_scuti:
+rule papara_Clade3:
     input:
-        query_seqs = SCUTI_PLACEMENT + "scuti_seqs.fasta",
-        tree       = config["SCUTI_TREE"],
-        msa_phylip = config["MSA_PHYLIP_SCUTI"],
-        msa_fasta  = config["MSA_FASTA_SCUTI"],
-        clades     = config["CLADES_SCUTI"]
+        query_seqs = CLADE3_PLACEMENT + "Clade3_seqs.fasta",
+        tree       = config["CLADE3_TREE"],
+        msa_phylip = config["MSA_PHYLIP_CLADE3"],
+        msa_fasta  = config["MSA_FASTA_CLADE3"],
+        clades     = config["CLADES_CLADE3"]
     output:
-        papara_alignment = SCUTI_PLACEMENT + "papara_alignment.default"
+        papara_alignment = CLADE3_PLACEMENT + "papara_alignment.default"
     params:
-        placement_dir = SCUTI_PLACEMENT
+        placement_dir = CLADE3_PLACEMENT
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -1958,15 +1954,15 @@ rule papara_scuti:
         """
 
 
-rule epa_split_scuti:
+rule epa_split_Clade3:
     input:
-        papara_alignment = SCUTI_PLACEMENT + "papara_alignment.default",
-        msa_fasta        = config["MSA_FASTA_SCUTI"]
+        papara_alignment = CLADE3_PLACEMENT + "papara_alignment.default",
+        msa_fasta        = config["MSA_FASTA_CLADE3"]
     output:
-        query_fasta = SCUTI_PLACEMENT + "query.fasta",
-        ref_fasta   = SCUTI_PLACEMENT + "reference.fasta"
+        query_fasta = CLADE3_PLACEMENT + "query.fasta",
+        ref_fasta   = CLADE3_PLACEMENT + "reference.fasta"
     params:
-        placement_dir = SCUTI_PLACEMENT
+        placement_dir = CLADE3_PLACEMENT
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -1984,18 +1980,18 @@ rule epa_split_scuti:
         """
 
 
-rule raxml_evaluate_scuti:
+rule raxml_evaluate_Clade3:
     input:
-        ref_fasta = SCUTI_PLACEMENT + "reference.fasta",
-        tree      = config["SCUTI_TREE"]
+        ref_fasta = CLADE3_PLACEMENT + "reference.fasta",
+        tree      = config["CLADE3_TREE"]
     output:
-        best_model = SCUTI_PLACEMENT + "reference.fasta.raxml.bestModel",
-        best_tree  = SCUTI_PLACEMENT + "reference.fasta.raxml.bestTree",
-        log        = SCUTI_PLACEMENT + "reference.fasta.raxml.log",
-        rba        = SCUTI_PLACEMENT + "reference.fasta.raxml.rba",
-        start_tree = SCUTI_PLACEMENT + "reference.fasta.raxml.startTree"
+        best_model = CLADE3_PLACEMENT + "reference.fasta.raxml.bestModel",
+        best_tree  = CLADE3_PLACEMENT + "reference.fasta.raxml.bestTree",
+        log        = CLADE3_PLACEMENT + "reference.fasta.raxml.log",
+        rba        = CLADE3_PLACEMENT + "reference.fasta.raxml.rba",
+        start_tree = CLADE3_PLACEMENT + "reference.fasta.raxml.startTree"
     params:
-        placement_dir = SCUTI_PLACEMENT
+        placement_dir = CLADE3_PLACEMENT
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -2016,17 +2012,17 @@ rule raxml_evaluate_scuti:
         """
 
 
-rule epa_placement_scuti:
+rule epa_placement_Clade3:
     input:
-        tree        = config["SCUTI_TREE"],
-        ref_fasta   = SCUTI_PLACEMENT + "reference.fasta",
-        query_fasta = SCUTI_PLACEMENT + "query.fasta",
-        best_model  = SCUTI_PLACEMENT + "reference.fasta.raxml.bestModel"
+        tree        = config["CLADE3_TREE"],
+        ref_fasta   = CLADE3_PLACEMENT + "reference.fasta",
+        query_fasta = CLADE3_PLACEMENT + "query.fasta",
+        best_model  = CLADE3_PLACEMENT + "reference.fasta.raxml.bestModel"
     output:
-        jplace   = SCUTI_PLACEMENT + "epa_result.jplace",
-        info_log = SCUTI_PLACEMENT + "epa_info.log"
+        jplace   = CLADE3_PLACEMENT + "epa_result.jplace",
+        info_log = CLADE3_PLACEMENT + "epa_info.log"
     params:
-        placement_dir = SCUTI_PLACEMENT,
+        placement_dir = CLADE3_PLACEMENT,
         filter_acc_lwr = config["epa_filter_acc_lwr"],
         filter_max     = config["epa_filter_max"]
     threads: 17
@@ -2052,15 +2048,15 @@ rule epa_placement_scuti:
         """
 
 
-rule gappa_heat_tree_scuti:
+rule gappa_heat_tree_Clade3:
     input:
-        jplace = SCUTI_PLACEMENT + "epa_result.jplace"
+        jplace = CLADE3_PLACEMENT + "epa_result.jplace"
     output:
-        svg    = SCUTI_PLACEMENT + "tree.svg",
-        newick = SCUTI_PLACEMENT + "tree.newick",
-        nexus  = SCUTI_PLACEMENT + "tree.nexus"
+        svg    = CLADE3_PLACEMENT + "tree.svg",
+        newick = CLADE3_PLACEMENT + "tree.newick",
+        nexus  = CLADE3_PLACEMENT + "tree.nexus"
     params:
-        placement_dir = SCUTI_PLACEMENT,
+        placement_dir = CLADE3_PLACEMENT,
         mass_norm   = config["gappa_mass_norm"]
     conda:
         "envs/phylo_placement.yaml"
@@ -2081,16 +2077,16 @@ rule gappa_heat_tree_scuti:
         """
 
 
-rule gappa_assign_scuti:
+rule gappa_assign_Clade3:
     input:
-        jplace = SCUTI_PLACEMENT + "epa_result.jplace",
-        clades = config["CLADES_SCUTI"]
+        jplace = CLADE3_PLACEMENT + "epa_result.jplace",
+        clades = config["CLADES_CLADE3"]
     output:
-        per_query     = SCUTI_PLACEMENT + "per_query.tsv",
-        profile       = SCUTI_PLACEMENT + "profile.tsv",
-        labelled_tree = SCUTI_PLACEMENT + "labelled_tree.newick"
+        per_query     = CLADE3_PLACEMENT + "per_query.tsv",
+        profile       = CLADE3_PLACEMENT + "profile.tsv",
+        labelled_tree = CLADE3_PLACEMENT + "labelled_tree.newick"
     params:
-        placement_dir = SCUTI_PLACEMENT,
+        placement_dir = CLADE3_PLACEMENT,
         consensus_thresh = config["gappa_consensus_thresh"]
     conda:
         "envs/phylo_placement.yaml"
@@ -2112,16 +2108,16 @@ rule gappa_assign_scuti:
         """
 
 
-rule gappa_lwr_edpl_scuti:
+rule gappa_lwr_edpl_Clade3:
     input:
-        jplace = SCUTI_PLACEMENT + "epa_result.jplace"
+        jplace = CLADE3_PLACEMENT + "epa_result.jplace"
     output:
-        lwr_histogram  = SCUTI_PLACEMENT + "lwr-histogram.csv",
-        lwr_list       = SCUTI_PLACEMENT + "lwr-list.csv",
-        edpl_histogram = SCUTI_PLACEMENT + "edpl_histogram.csv",
-        edpl_list      = SCUTI_PLACEMENT + "edpl_list.csv"
+        lwr_histogram  = CLADE3_PLACEMENT + "lwr-histogram.csv",
+        lwr_list       = CLADE3_PLACEMENT + "lwr-list.csv",
+        edpl_histogram = CLADE3_PLACEMENT + "edpl_histogram.csv",
+        edpl_list      = CLADE3_PLACEMENT + "edpl_list.csv"
     params:
-        placement_dir = SCUTI_PLACEMENT,
+        placement_dir = CLADE3_PLACEMENT,
     conda:
         "envs/phylo_placement.yaml"
     shell:
@@ -2145,16 +2141,15 @@ rule gappa_lwr_edpl_scuti:
         """
 
 
-# ---- SCUTI PLACEMENT FILTERING (replicates filter_euk_placements / extract_unassigned_ciliates
-#      on the Scuti tree's own placement results) ----
+# ---- CLADE 3 PLACEMENT FILTERING
 
-rule filter_scuti_final:
+rule filter_Clade3_final:
     input:
-        per_query = SCUTI_PLACEMENT + "per_query.tsv",
-        lwr_list  = SCUTI_PLACEMENT + "lwr-list.csv",
-        edpl_list = SCUTI_PLACEMENT + "edpl_list.csv"
+        per_query = CLADE3_PLACEMENT + "per_query.tsv",
+        lwr_list  = CLADE3_PLACEMENT + "lwr-list.csv",
+        edpl_list = CLADE3_PLACEMENT + "edpl_list.csv"
     output:
-        tsv = SCUTI_PLACEMENT + "filtered_Scuti_LWR_EDPL.tsv"
+        tsv = CLADE3_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv"
     params:
         edpl_threshold = config["edpl_threshold"]
     conda:
@@ -2163,12 +2158,12 @@ rule filter_scuti_final:
         "scripts/filter_placements.py"
 
 
-rule extract_scuti_final_seqs:
+rule extract_Clade3_final_seqs:
     input:
-        tsv   = SCUTI_PLACEMENT + "filtered_Scuti_LWR_EDPL.tsv",
-        fasta = SCUTI_PLACEMENT + "scuti_seqs.fasta"
+        tsv   = CLADE3_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv",
+        fasta = CLADE3_PLACEMENT + "Clade3_seqs.fasta"
     output:
-        fasta = SCUTI_PLACEMENT + "scuti_placed_seqs.fasta"
+        fasta = CLADE3_PLACEMENT + "Clade3_placed_seqs.fasta"
     conda:
         "envs/pysradb.yaml"
     script:
@@ -2183,10 +2178,10 @@ rule prepare_phyloseq_objects:
     input:
         metadata = "documents/merged/merged_metadata.csv",
         envo_map = "reference/ENVO_IDs.csv",
-        apm = APM_PLACEMENT + "filtered_APM_LWR_EDPL.tsv",
-        plagio = PLAGIO_PLACEMENT + "filtered_Plagio_LWR_EDPL.tsv",
-        scuti = SCUTI_PLACEMENT + "filtered_Scuti_LWR_EDPL.tsv",
-        cil_counts = MERGED + "export/table/merged-ciliophora-table.tsv",
+        Clade1 = CLADE1_PLACEMENT + "filtered_Clade1_LWR_EDPL.tsv",
+        Clade2 = CLADE2_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv",
+        Clade3 = CLADE3_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv",
+        taxon_counts = MERGED + "export/table/merged-taxon-table.tsv",
         unassigned_counts = MERGED + "export/table/merged-unassigned-table.tsv"
     output:
         taxonomy = FIGURES + "pp_taxonomy.tsv",
@@ -2204,8 +2199,8 @@ rule prepare_phyloseq_objects:
         mkdir -p {FIGURES}
         Rscript scripts/prepare_phyloseq_objects.R \
             {input.metadata} \
-            {input.apm} {input.plagio} {input.scuti} \
-            {input.cil_counts} {input.unassigned_counts} \
+            {input.Clade1} {input.Clade2} {input.Clade3} \
+            {input.taxon_counts} {input.unassigned_counts} \
             {output.taxonomy} {output.counts} {output.meta_clean} \
             {output.meta_rds} {output.tax_rds} {output.otu_rds} {output.ps_rds} \
             {input.envo_map} {output.missing_report}
