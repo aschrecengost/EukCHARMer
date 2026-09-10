@@ -786,13 +786,10 @@ rule merge_metadata:
         cleaned = expand("documents/cleaned/{project}.csv", project=PROJECTS)
     output:
         merged = "documents/merged/merged_metadata.csv"
-    run:
-        import pandas as pd
-        import os
-        os.makedirs("documents/merged", exist_ok=True)
-        df = pd.concat([pd.read_csv(f) for f in input.cleaned], ignore_index=True)
-        df.to_csv(output.merged, index=False)
-        print(f"Merged {len(input.cleaned)} projects, {len(df)} total rows")
+    conda:
+        "envs/pysradb.yaml"
+    script:
+        "scripts/merge_metadata.py"
 
 rule papara_unassigned_seqs:
     input:
@@ -1353,7 +1350,7 @@ rule filter_CLADE1_placements:
         lwr_list  = TAXON_PLACEMENT + "lwr-list.csv",
         edpl_list = TAXON_PLACEMENT + "edpl_list.csv"
     output:
-        tsv = TAXON_PLACEMENT + "filtered_CLADE1_LWR_EDPL.tsv"
+        tsv = TAXON_PLACEMENT + "filtered_Clade1_LWR_EDPL.tsv"
     params:
         edpl_threshold = config["edpl_threshold"]
     conda:
@@ -1396,7 +1393,7 @@ rule filter_Clade3_placements:
 
 rule extract_Clade1_seqs:
     input:
-        tsv   = TAXON_PLACEMENT + "filtered_CLADE1_LWR_EDPL.tsv",
+        tsv   = TAXON_PLACEMENT + "filtered_Clade1_LWR_EDPL.tsv",
         fasta = TAXON_PLACEMENT + "Taxon_seqs.fasta"
     output:
         fasta = CLADE1_PLACEMENT + "Clade1_seqs.fasta"
@@ -1639,7 +1636,7 @@ rule filter_Clade1_final:
         lwr_list  = CLADE1_PLACEMENT + "lwr-list.csv",
         edpl_list = CLADE1_PLACEMENT + "edpl_list.csv"
     output:
-        tsv = CLADE1_PLACEMENT + "filtered_CLADE1_LWR_EDPL.tsv"
+        tsv = CLADE1_PLACEMENT + "filtered_Clade1_LWR_EDPL.tsv"
     params:
         edpl_threshold = config["edpl_threshold"]
     conda:
@@ -1650,7 +1647,7 @@ rule filter_Clade1_final:
 
 rule extract_Clade1_final_seqs:
     input:
-        tsv   = CLADE1_PLACEMENT + "filtered_CLADE1_LWR_EDPL.tsv",
+        tsv   = CLADE1_PLACEMENT + "filtered_Clade1_LWR_EDPL.tsv",
         fasta = CLADE1_PLACEMENT + "Clade1_seqs.fasta"
     output:
         fasta = CLADE1_PLACEMENT + "Clade1_placed_seqs.fasta"
@@ -1969,7 +1966,6 @@ rule papara_Clade3:
 
         cd {params.placement_dir}
 
-        module load papara_nt/2.5
         {params.papara_setup}
         {params.papara_executable} \
             -t $(basename {input.tree}) \
