@@ -90,8 +90,8 @@ p_include_unassigned:
 
 # Taxopath search terms for placement-result filtering (filter_by_taxopath.py)
 # rule filter_Taxon: selects Taxon hits out of the eukaryotic tree's
-# placements, feeding the Taxpm placement tier
-search_term_Taxon: ""
+# placements, feeding the Taxon placement tier
+search_term_taxa: ""
 # rules filter_Clade1 / filter_Clade2 / filter_Clade2: select clade candidates out
 # of the taxa tree's placements, feeding the Clade1/Clade2/Clade3 trees
 search_term_Clade1: ""
