@@ -240,7 +240,9 @@ This Snakemake pipeline uses a multi-level phylogenetic placement scheme, as des
 **Figure 2**. 3-tier multilevel placement scheme, adapted from (5). Processed ASVs from all studies are pre-filtered based on QIIME2 taxonomic assignment. 
 - 1: Unassigned sequences (A) are placed onto the Eukaryote tree, and sequences from your TOI (purple) are extracted.
 - 2: Sequences which are assigned to you TOI, either via placement onto the euk tree (A) or taxonomic assignment with QIIME2 (B, C) are placed onto the Taxon tree. Branches that are associated with a clade tree are colored accordingly (blue, orange, and green).
-- 3: Clade trees. The backbone tree and clade trees overlap each other such that each clade tree is represented by branches in the backbone tree. Three sequences A, B, and C which were assigned to your clades of interest on the Taxon tree are placed onto their respective clade tree. 
+- 3: Clade trees. The backbone tree and clade trees overlap each other such that each clade tree is represented by branches in the backbone tree. Three sequences A, B, and C which were assigned to your clades of interest on the Taxon tree are placed onto their respective clade tree.
+
+**You can choose to have either 1, 2, or 3 clade trees in the config file with the parameter `max_clade`**
 
 The multi-level placement approach utilized in this Snakemake pipeline reduces overall computational time, increases the accuracy of taxonomic assignments, allows the user to gain more fine-scale phylogenetic information about their recovered sequences, and, because we also include sequences which were unassigned from QIIME2-assignment, recovers sequences that would otherwise be lost. 
 
