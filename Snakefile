@@ -217,8 +217,7 @@ rule get_runs:
         SRRnumbers = RAW_DATA + "{project}/SRR.numbers"
     shell:
         """
-        cat {input.runinfo} | cut -d ',' -f 1 > {output.SRRnumbers}
-        sed -i '1d' {output.SRRnumbers}
+        cut -d ',' -f 1 {input.runinfo} | tail -n +2 > {output.SRRnumbers}
         """
 
 rule fasterq_dump:
