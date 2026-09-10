@@ -63,7 +63,9 @@ message("barplot: ", nsamples(ps_rel_habitat), " habitat groups, ",
 
 # ---- sample map (all samples) ----
 
-dataset_coords <- read.csv(metadata_csv)
+filtered_ps <- prune_samples(sample_sums(ps) >= 1, ps)
+                            
+dataset_coords<-data.frame(filtered_ps@sam_data)
 dataset_coords$lon_converted <- as.numeric(dataset_coords$lon_converted)
 dataset_coords$lat_converted <- as.numeric(dataset_coords$lat_converted)
 dataset_coords <- dataset_coords[!is.na(dataset_coords$lon_converted) &
