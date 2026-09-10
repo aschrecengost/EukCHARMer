@@ -13,6 +13,8 @@ OUTPUT = config["output"]
 VISUALIZATION = config["visualization"]
 REFFASTA = config["taxonomy_fasta"]
 CLASSIFIER = config["trained_ref_database"]
+SRA_CACHE = config["sra_cache"]
+FASTERQ_TEMP = config["fasterq_temp"]
 
 # Merged paths
 MERGED = OUTPUT + "_merged/"
@@ -189,7 +191,7 @@ rule download_runinfo:
     output:
         runinfo = RAW_DATA + "{project}/runinfo.csv"
     conda:
-        "envs/parallelfastqdump.yaml"
+        "envs/sra_download.yaml"
     params:
         sra_id = lambda wildcards: get_setting(wildcards, "SRAid", wildcards.project)
     shell:
@@ -210,24 +212,20 @@ rule get_runs:
         sed -i '1d' {output.SRRnumbers}
         """
 
-
 rule fasterq_dump:
     input:
         SRRnumbers = RAW_DATA + "{project}/SRR.numbers"
     output:
         rawreads = directory(RAW_DATA + "{project}/reads")
     params:
-        sra_dir = RAW_DATA + "{project}/sra",
-        temp_dir = RAW_DATA + "{project}/fasterq_tmp"
+        sra_dir = SRA_CACHE + "{project}",
+        temp_dir = FASTERQ_TEMP + "{project}"
     threads: 10
     conda:
         "envs/sra_download.yaml"
     shell:
         """
-        mkdir -p "{output.rawreads}"
-
-        tmpdir=$(mktemp -d "${{TMPDIR:-/tmp}}/fasterq.XXXXXX")
-        trap 'rm -rf "$tmpdir"' EXIT
+        mkdir -p "{output.rawreads}" "{params.sra_dir}" "{params.temp_dir}"
 
         cr=$(printf '\\r')
         tr -d "$cr" < "{input.SRRnumbers}" |
@@ -236,11 +234,14 @@ rule fasterq_dump:
 
             echo "Downloading $srr"
 
-            fasterq-dump "$srr" \
+            prefetch "$srr" \
+                --output-directory "{params.sra_dir}/$srr"
+
+            fasterq-dump "{params.sra_dir}/$srr" \
                 --threads {threads} \
                 --split-files \
                 --outdir "{output.rawreads}" \
-                --temp "$tmpdir"
+                --temp "{params.temp_dir}"
 
             for fastq in "{output.rawreads}/$srr"*.fastq; do
                 [ -e "$fastq" ] || continue
@@ -248,7 +249,6 @@ rule fasterq_dump:
             done
         done
         """
-
 
 rule rename_files_import:
     input:
