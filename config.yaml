@@ -47,6 +47,7 @@ visualization: "results/visualizations/"
 taxonomy_fasta: "reference/reference_database.qza"
 trained_ref_database: "reference/classifier.qza"
 REFFASTA: "reference/reference_database.qza"
+qiime_environment: "envs/qiime2-amplicon-2026.1-macos.yml"
 
 # 1 = Clade1 only
 # 2 = Clade1 and Clade2
