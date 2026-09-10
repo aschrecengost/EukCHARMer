@@ -53,6 +53,12 @@ REFFASTA: "reference/reference_database.qza"
 # 3 = Clade1, Clade2, and Clade3
 max_clade: 1
 
+# PaPaRa software loading
+# if running on HPC and loadind with module, 
+# type the full command in papara_module
+papara_module: null
+papara_executable: "papara"
+
 # Eukaryote reference files
 EUK_TREE: "reference/euk_tree.tree"
 MSA_FASTA_EUK: "reference/eukaryotic_reference_tree.fasta"
