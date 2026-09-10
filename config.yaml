@@ -46,7 +46,6 @@ output: "results/"
 visualization: "results/visualizations/"
 taxonomy_fasta: "reference/reference_database.qza"
 trained_ref_database: "reference/classifier.qza"
-REFFASTA: "reference/reference_database.qza"
 # choose qiime environment: for Linux/WSL: rachis-qiime2-linux-64-conda.yml
 # for MacOS: rachis-qiime2-osx-64-conda.yml
 qiime_environment: ""
