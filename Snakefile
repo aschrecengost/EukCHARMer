@@ -216,17 +216,37 @@ rule fasterq_dump:
         SRRnumbers = RAW_DATA + "{project}/SRR.numbers"
     output:
         rawreads = directory(RAW_DATA + "{project}/reads")
-    conda:
-        "envs/parallelfastqdump.yaml"
+    params:
+        sra_dir = RAW_DATA + "{project}/sra",
+        temp_dir = RAW_DATA + "{project}/fasterq_tmp"
     threads: 10
+    conda:
+        "envs/sra_download.yaml"
     shell:
         """
-        mkdir -p {output.rawreads}
-        cat {input.SRRnumbers} | parallel -j 1 \
-        parallel-fastq-dump --sra-id {{}} \
-        --threads {threads} \
-        --outdir {output.rawreads} \
-        --split-files --gzip
+        mkdir -p "{output.rawreads}"
+
+        tmpdir=$(mktemp -d "${{TMPDIR:-/tmp}}/fasterq.XXXXXX")
+        trap 'rm -rf "$tmpdir"' EXIT
+
+        cr=$(printf '\\r')
+        tr -d "$cr" < "{input.SRRnumbers}" |
+        while IFS= read -r srr; do
+            [ -n "$srr" ] || continue
+
+            echo "Downloading $srr"
+
+            fasterq-dump "$srr" \
+                --threads {threads} \
+                --split-files \
+                --outdir "{output.rawreads}" \
+                --temp "$tmpdir"
+
+            for fastq in "{output.rawreads}/$srr"*.fastq; do
+                [ -e "$fastq" ] || continue
+                pigz -p {threads} "$fastq"
+            done
+        done
         """
 
 
