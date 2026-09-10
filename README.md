@@ -87,7 +87,7 @@ Snakemake/
 │   ├── Clade2_tree.tree***
 │   ├── Clade2_reference_tax.txt***
 │   ├── Clade2_reference_tree.fasta***
-│   ├── Clade2_reference_tree.phy**8
+│   ├── Clade2_reference_tree.phy***
 │   ├── Clade3_tree.tree**8
 │   ├── Clade3_reference_tax.txt***
 │   ├── Clade3_reference_tree.fasta***
