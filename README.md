@@ -86,7 +86,7 @@ Snakemake/
 │   ├── make_empty_qza.py
 │   └── prepare_phyloseq_objects.R
 └── envs/
-│   ├── parallelfastqdump.yaml
+│   ├── sra_download.yaml
 │   ├── phylo_placement.yaml
 │   ├── pysradb.yaml
 │   ├── qiime2-amplicon-2026.1.yaml
@@ -175,6 +175,9 @@ Then there is a shared settings section, which is where you will detail the loca
 - **`search_term_taxa`, `search_term_clade1`, `search_term_clade2`, `search_term_clade3`** - the taxopath substrings used to extract placements from each placement step. `search_term_taxa` is used to extract placements from the Eukaryote tree. Sequences assigned to this group will then be placed onto the Taxon tree, and then placements from that tree are extracted with `search_term_clade1`, and optionally `search_term_clade2` and `search_term_clade3`, and then placed on their corresponding Clade trees.
     - In our example, `search_term_taxa` = `Ciliophora`, `search_term_clade1` = `Armophorea`, `search_term_clade2` = `Plagiopylea`, `search_term_clade3` = `Anaerocycliididae`.
 - **`EUK_TREE`, `MSA_FASTA_EUK`, `MSA_PHYLIP_EUK`, `CLADES_EUKS`** and the equivalent `TAXON_*`, `CLADE1_*`, `CLADE2_*`, `CLADE3_*` blocks - the tree/alignment/taxonomy files for each phylogenetic placement step. See ["How do I find or generate appropriate reference trees for phylogenetic placement?"](#how-do-i-find-or-generate-appropriate-reference-trees-for-phylogenetic-placement) for how to build your own set for a different TOI).
+- **`max_clade`** - set this = to the number of clade trees you are using (1, 2, or 3)
+- **`papara_module` and `papara_executable`** - if running locally, `papara_module` is set to "null". If running on HPC, change this value to the command used to load (e.g. `module load papara`)
+- **`qiime_environment`** - you must specify which QIIME2 environment file to use to build your conda environment, depending on if you are running on HPC (Linux), or MacOS (Mac), or WSL (Linux).
 
 Here are the remaining values: 
 - **`taxonomy_fasta`, `trained_ref_database`, `REFFASTA`** - paths to the reference FASTA/classifier described in the [Setup](#setup).
