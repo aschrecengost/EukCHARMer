@@ -2,7 +2,7 @@
 # any jobs without defined parameters will have those defined in default
 
 __default__:
-  partition: cpu,uri-cpu
+  partition:
   time: 03:00:00
   mem: 30000 # in MB
   ntasks: 10
@@ -10,178 +10,69 @@ __default__:
 
 
 fasterq_dump:
-  partition: cpu,uri-cpu
+  partition:
   time: 04:00:00
   mem: 30000 # in MB
   ntasks: 10
   nodes: 1
 
 merge:
-  partition: cpu,uri-cpu
+  partition:
   time: 04:00:00
   mem: 30000 # in MB
   ntasks: 16
   nodes: 1
 
 demux_summarize:
-  partition: cpu,uri-cpu
+  partition:
   time: 04:00:00
   mem: 30000 # in MB
   ntasks: 16
   nodes: 1
 
 deblur:
-  partition: cpu,uri-cpu
+  partition:
   time: 02-00:00:00
   mem: 100000 # in MB
   ntasks: 24
   nodes: 1
 
 assign_tax:
-  partition: cpu,uri-cpu
+  partition:
   time: 02-00:00:00
   mem: 100000 # in MB
   ntasks: 16
   nodes: 1
 
-# Placement stage (threads: 17 in the Snakefile) - one block per clade
-# (unassigned/ciliate/apm/plagio/scuti) since none of these rule names
-# match a bare "papara:" key, they were previously falling through to
-# __default__ (10 cpus / 30G / 3h) instead of getting these resources.
 papara_unassigned_seqs:
+  partition:
+  time: 02-00:00:00
+  mem: 64000 # in MB
+  ntasks: 17
+  nodes: 1
+
+papara_Taxon:
+  partition:
+  time: 02-00:00:00
+  mem: 64000 # in MB
+  ntasks: 17
+  nodes: 1
+
+papara_Clade1:
+  partition:
+  time: 02-00:00:00
+  mem: 64000 # in MB
+  ntasks: 17
+  nodes: 1
+
+papara_Clade2:
   partition: cpu,uri-cpu
   time: 02-00:00:00
   mem: 64000 # in MB
   ntasks: 17
   nodes: 1
 
-papara_ciliate:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-papara_apm:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-papara_plagio:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-papara_scuti:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-epa_split:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-epa_split_ciliate:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-epa_split_apm:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-epa_split_plagio:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-epa_split_scuti:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-raxml_evaluate:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-raxml_evaluate_ciliate:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-raxml_evaluate_apm:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-raxml_evaluate_plagio:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-raxml_evaluate_scuti:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-epa_placement:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-epa_placement_ciliate:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-epa_placement_apm:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-epa_placement_plagio:
-  partition: cpu,uri-cpu
-  time: 02-00:00:00
-  mem: 64000 # in MB
-  ntasks: 17
-  nodes: 1
-
-epa_placement_scuti:
+papara_Clade3:
   partition: cpu,uri-cpu
   time: 02-00:00:00
   mem: 64000 # in MB
