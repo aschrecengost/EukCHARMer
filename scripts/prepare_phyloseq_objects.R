@@ -2,27 +2,6 @@
 # Build the three phyloseq input objects (sample_data, tax_table, otu_table)
 # from pipeline outputs, plus the two combined TSVs they are derived from.
 #
-# Adapted from the import sections of map_and_plot_snakemake.R:
-#   meta <- read.table("TableS2.csv", sep=",", header=TRUE)
-#   META <- sample_data(data.frame(meta, row.names=meta$'Run'))
-#   taxonomy_pp <- read.csv("unassigned/pp_taxonomy.tsv", sep="\t", row.names=1)
-#   TAX_pp <- tax_table(as.matrix(taxonomy_pp))
-#   otu_all <- read.csv("unassigned/anaerobic_ciliate_otu_table_full.tsv", sep="\t", row.names=1)
-#   ASV_all <- otu_table(data.frame(otu_all), taxa_are_rows=TRUE)
-#
-# Differences from the original:
-#  - sample IDs come from `run_accession` (ERR/SRR accessions, matching the
-#    count-table sample columns) instead of `Run`.
-#  - the taxonomy table is built here from the EDPL/LWR-filtered clade-tree
-#    placements (filtered_{APM,Plagio,Scuti}_LWR_EDPL.tsv), so it covers only
-#    the high-confidence anaerobic-ciliate placements.
-#  - the count table is built here by combining the exported ciliophora and
-#    unassigned tables. Their sample columns differ, so this is an outer
-#    join on samples (missing combinations filled with 0), not a cat.
-#  - env_2 is derived from env_biome (ENVO codes resolved to labels via the
-#    BioPortal ENVO export); shallow_deep is derived from depth_m
-#    (<= 200 m -> shallow, > 200 m -> deep, missing -> NA).
-#
 # Usage:
 #   Rscript prepare_phyloseq_objects.R \
 #     <merged_metadata.csv> \
