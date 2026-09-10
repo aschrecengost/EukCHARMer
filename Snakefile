@@ -19,7 +19,7 @@ MERGED = OUTPUT + "_merged/"
 
 # Placements
 PLACEMENT        = OUTPUT + "_placement/"
-TAXON_PLACEMENT    = OUTPUT + "_taxon_placement/"
+TAXON_PLACEMENT    = OUTPUT + "_Taxon_placement/"
 CLADE1_PLACEMENT    = OUTPUT + "_Clade1_placement/"
 CLADE2_PLACEMENT = OUTPUT + "_Clade2_placement/"
 CLADE3_PLACEMENT  = OUTPUT + "_Clade3_placement/"
@@ -109,11 +109,11 @@ rule all:
         merged_taxa = MERGED + "merged-taxa.qza",
 
         # Taxon merged artifacts and exports
-        merged_taxon_table = MERGED + "merged-taxon-table.qza",
-        merged_taxon_seqs = MERGED + "merged-taxon-seqs.qza",
-        table_taxon_biom = MERGED + "export/table/merged-taxon-table.biom",
-        table_taxon_tsv = MERGED + "export/table/merged-taxon-table.tsv",
-        rep_seqs_taxon_fasta = MERGED + "export/merged-taxon-seqs.fasta",
+        merged_Taxon_table = MERGED + "merged-Taxon-table.qza",
+        merged_Taxon_seqs = MERGED + "merged-Taxon-seqs.qza",
+        table_Taxon_biom = MERGED + "export/table/merged-Taxon-table.biom",
+        table_Taxon_tsv = MERGED + "export/table/merged-Taxon-table.tsv",
+        rep_seqs_Taxon_fasta = MERGED + "export/merged-Taxon-seqs.fasta",
 
         # Unassigned merged artifacts and exports
         merged_unassigned_table = MERGED + "merged-unassigned-table.qza",
@@ -151,9 +151,9 @@ rule all:
         unassigned_edpl_histogram = PLACEMENT + "edpl_histogram.csv",
 
         # EUK placement filtering
-        per_query_taxon = PLACEMENT + "per_query_taxon.tsv",
-        filtered_euk_placements = PLACEMENT + "filtered_taxon_LWR_EDPL.tsv",
-        unassigned_taxon_fasta = PLACEMENT + "unassigned_taxon.fasta",
+        per_query_Taxon = PLACEMENT + "per_query_Taxon.tsv",
+        filtered_euk_placements = PLACEMENT + "filtered_Taxon_LWR_EDPL.tsv",
+        unassigned_Taxon_fasta = PLACEMENT + "unassigned_Taxon.fasta",
 
         # Taxa placement outputs
         taxa_jplace = TAXON_PLACEMENT + "epa_result.jplace",
@@ -165,10 +165,10 @@ rule all:
         # Clade filtering
         per_query_Clade1 = TAXON_PLACEMENT + "per_query_Clade1.tsv",
         per_query_Clade2 = TAXON_PLACEMENT + "per_query_Clade2.tsv",
-        per_query_Clade3 = taxon_PLACEMENT + "per_query_Clade3.tsv",
-        filtered_Clade1 = taxon_PLACEMENT + "filtered_Clade1_LWR_EDPL.tsv",
-        filtered_Clade2 = taxon_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv",
-        filtered_Clade3 = taxon_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv",
+        per_query_Clade3 = TAXON_PLACEMENT + "per_query_Clade3.tsv",
+        filtered_Clade1 = TAXON_PLACEMENT + "filtered_Clade1_LWR_EDPL.tsv",
+        filtered_Clade2 = TAXON_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv",
+        filtered_Clade3 = TAXON_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv",
 
         # Clade1 placement outputs
         Clade1_jplace = CLADE1_PLACEMENT + "epa_result.jplace",
@@ -577,13 +577,13 @@ rule filter_seqs_unassigned:
 
 rule merge_filtered:
     input:
-        tables_taxon = expand(OUTPUT + "{project}/{project}-table-taxa.qza", project=PROJECTS),
-        seqs_taxon = expand(OUTPUT + "{project}/{project}-rep-seqs-taxa.qza", project=PROJECTS),
+        tables_Taxon = expand(OUTPUT + "{project}/{project}-table-taxa.qza", project=PROJECTS),
+        seqs_Taxon = expand(OUTPUT + "{project}/{project}-rep-seqs-taxa.qza", project=PROJECTS),
         tables_unassigned = expand(OUTPUT + "{project}/{project}-table-unassigned.qza", project=PROJECTS),
         seqs_unassigned = expand(OUTPUT + "{project}/{project}-rep-seqs-unassigned.qza", project=PROJECTS)
     output:
-        merged_taxon_table = MERGED + "merged-taxon-table.qza",
-        merged_taxon_seqs = MERGED + "merged-taxon-seqs.qza",
+        merged_Taxon_table = MERGED + "merged-Taxon-table.qza",
+        merged_Taxon_seqs = MERGED + "merged-Taxon-seqs.qza",
         merged_unassigned_table = MERGED + "merged-unassigned-table.qza",
         merged_unassigned_seqs = MERGED + "merged-unassigned-seqs.qza"
     log:
@@ -592,14 +592,14 @@ rule merge_filtered:
         "envs/qiime2-amplicon-2026.1.yaml"
     shell:
         """
-        mkdir -p $(dirname {output.merged_taxon_table})
+        mkdir -p $(dirname {output.merged_Taxon_table})
         mkdir -p $(dirname {log})
         qiime feature-table merge \
-            --i-tables {input.tables_taxon} \
-            --o-merged-table {output.merged_taxon_table}
+            --i-tables {input.tables_Taxon} \
+            --o-merged-table {output.merged_Taxon_table}
         qiime feature-table merge-seqs \
-            --i-data {input.seqs_taxon} \
-            --o-merged-data {output.merged_taxon_seqs}
+            --i-data {input.seqs_Taxon} \
+            --o-merged-data {output.merged_Taxon_seqs}
         qiime feature-table merge \
             --i-tables {input.tables_unassigned} \
             --o-merged-table {output.merged_unassigned_table}
@@ -638,16 +638,16 @@ rule merge_projects:
         """
 
 
-rule export_taxon:
+rule export_Taxon:
     input:
-        table_taxon_merged = MERGED + "merged-taxon-table.qza",
-        rep_taxon_merged = MERGED + "merged-taxoniophora-seqs.qza"
+        table_Taxon_merged = MERGED + "merged-Taxon-table.qza",
+        rep_Taxon_merged = MERGED + "merged-Taxoniophora-seqs.qza"
     output:
-        table_taxon_biom = MERGED + "export/table/merged-taxon-table.biom",
-        table_taxon_tsv = MERGED + "export/table/merged-taxon-table.tsv",
-        rep_seqs_taxon_fasta = MERGED + "export/merged-taxon-seqs.fasta"
+        table_Taxon_biom = MERGED + "export/table/merged-Taxon-table.biom",
+        table_Taxon_tsv = MERGED + "export/table/merged-Taxon-table.tsv",
+        rep_seqs_Taxon_fasta = MERGED + "export/merged-Taxon-seqs.fasta"
     log:
-        MERGED + "logs/export_taxon_q2.log"
+        MERGED + "logs/export_Taxon_q2.log"
     conda:
         "envs/qiime2-amplicon-2026.1.yaml"
     params:
@@ -655,8 +655,8 @@ rule export_taxon:
         seqs_outdir = MERGED + "export/",
         # private temp dirs so a concurrently-running export_unassigned job can't
         # clobber our intermediate feature-table.biom / dna-sequences.fasta
-        table_tmpdir = MERGED + "export/table/.tmp_taxon/",
-        seqs_tmpdir = MERGED + "export/.tmp_taxon_seqs/"
+        table_tmpdir = MERGED + "export/table/.tmp_Taxon/",
+        seqs_tmpdir = MERGED + "export/.tmp_Taxon_seqs/"
     shell:
         """
         mkdir -p {params.table_outdir}
@@ -664,12 +664,12 @@ rule export_taxon:
         mkdir -p {params.table_tmpdir}
         mkdir -p {params.seqs_tmpdir}
         mkdir -p $(dirname {log})
-        qiime tools export --input-path {input.table_taxon_merged} --output-path {params.table_tmpdir}
-        mv {params.table_tmpdir}feature-table.biom {output.table_taxon_biom}
+        qiime tools export --input-path {input.table_Taxon_merged} --output-path {params.table_tmpdir}
+        mv {params.table_tmpdir}feature-table.biom {output.table_Taxon_biom}
         rmdir {params.table_tmpdir}
-        biom convert -i {output.table_taxon_biom} -o {output.table_taxon_tsv} --to-tsv
-        qiime tools export --input-path {input.rep_taxon_merged} --output-path {params.seqs_tmpdir}
-        mv {params.seqs_tmpdir}dna-sequences.fasta {output.rep_seqs_taxon_fasta}
+        biom convert -i {output.table_Taxon_biom} -o {output.table_Taxon_tsv} --to-tsv
+        qiime tools export --input-path {input.rep_Taxon_merged} --output-path {params.seqs_tmpdir}
+        mv {params.seqs_tmpdir}dna-sequences.fasta {output.rep_seqs_Taxon_fasta}
         rmdir {params.seqs_tmpdir}
         """
 
@@ -689,7 +689,7 @@ rule export_unassigned:
     params:
         table_outdir = MERGED + "export/table/",
         seqs_outdir = MERGED + "export/",
-        # private temp dirs so a concurrently-running export_taxon job can't
+        # private temp dirs so a concurrently-running export_Taxon job can't
         # clobber our intermediate feature-table.biom / dna-sequences.fasta
         table_tmpdir = MERGED + "export/table/.tmp_unassigned/",
         seqs_tmpdir = MERGED + "export/.tmp_unassigned_seqs/"
@@ -1007,11 +1007,11 @@ rule gappa_lwr_edpl:
 
 # ---- EUK PLACEMENT FILTERING ----
 
-rule filter_taxon:
+rule filter_Taxon:
     input:
         tsv = PLACEMENT + "per_query.tsv"
     output:
-        tsv = PLACEMENT + "per_query_taxon.tsv"
+        tsv = PLACEMENT + "per_query_Taxon.tsv"
     params:
         search_term = config["search_term_taxa"]
     conda:
@@ -1022,11 +1022,11 @@ rule filter_taxon:
 
 rule filter_euk_placements:
     input:
-        per_query = PLACEMENT + "per_query_taxon.tsv",
+        per_query = PLACEMENT + "per_query_Taxon.tsv",
         lwr_list  = PLACEMENT + "lwr-list.csv",
         edpl_list = PLACEMENT + "edpl_list.csv"
     output:
-        tsv = PLACEMENT + "filtered_taxon_LWR_EDPL.tsv"
+        tsv = PLACEMENT + "filtered_Taxon_LWR_EDPL.tsv"
     params:
         edpl_threshold = config["edpl_threshold"]
     conda:
@@ -1035,12 +1035,12 @@ rule filter_euk_placements:
         "scripts/filter_placements.py"
 
 
-rule extract_unassigned_taxon:
+rule extract_unassigned_Taxon:
     input:
-        tsv   = PLACEMENT + "filtered_taxon_LWR_EDPL.tsv",
+        tsv   = PLACEMENT + "filtered_Taxon_LWR_EDPL.tsv",
         fasta = MERGED + "export/merged-unassigned-seqs.fasta"
     output:
-        fasta = PLACEMENT + "unassigned_taxon.fasta"
+        fasta = PLACEMENT + "unassigned_Taxon.fasta"
     conda:
         "envs/pysradb.yaml"
     script:
@@ -1049,23 +1049,23 @@ rule extract_unassigned_taxon:
 
 # ---- TAXON PLACEMENT ----
 
-rule combine_taxon_seqs:
+rule combine_Taxon_seqs:
     input:
-        unassigned_taxon = PLACEMENT + "unassigned_taxon.fasta",
-        asvs_taxon       = MERGED + "export/merged-taxon-seqs.fasta"
+        unassigned_Taxon = PLACEMENT + "unassigned_Taxon.fasta",
+        asvs_Taxon       = MERGED + "export/merged-Taxon-seqs.fasta"
     output:
-        combined = TAXON_PLACEMENT + "taxon_seqs.fasta"
+        combined = TAXON_PLACEMENT + "Taxon_seqs.fasta"
     shell:
         """
         mkdir -p {TAXON_PLACEMENT}
-        cat {input.unassigned_taxon} {input.asvs_taxon} > {output.combined}
+        cat {input.unassigned_Taxon} {input.asvs_Taxon} > {output.combined}
         """
 
 
-rule papara_taxon:
+rule papara_Taxon:
     input:
-        taxon_seqs = TAXON_PLACEMENT + "taxon_seqs.fasta",
-        taxon_tree     = config["TAXON_TREE"],
+        Taxon_seqs = TAXON_PLACEMENT + "Taxon_seqs.fasta",
+        Taxon_tree     = config["TAXON_TREE"],
         msa_phylip   = config["MSA_PHYLIP_TAXON"],
         msa_fasta    = config["MSA_FASTA_TAXON"],
         clades       = config["CLADES_TAXON"]
@@ -1091,14 +1091,14 @@ rule papara_taxon:
         papara \
             -t $(basename {input.cil_tree}) \
             -s $(basename {input.msa_phylip}) \
-            -q $(basename {input.taxon_seqs}) \
+            -q $(basename {input.Taxon_seqs}) \
             -j {threads} \
             -r
 
         """
 
 
-rule epa_split_taxon:
+rule epa_split_Taxon:
     input:
         papara_alignment = TAXON_PLACEMENT + "papara_alignment.default",
         msa_fasta        = config["MSA_FASTA_TAXON"]
@@ -1124,7 +1124,7 @@ rule epa_split_taxon:
         """
 
 
-rule raxml_evaluate_taxon:
+rule raxml_evaluate_Taxon:
     input:
         ref_fasta = TAXON_PLACEMENT + "reference.fasta",
         cil_tree  = config["TAXON_TREE"]
@@ -1156,7 +1156,7 @@ rule raxml_evaluate_taxon:
         """
 
 
-rule epa_placement_taxon:
+rule epa_placement_Taxon:
     input:
         cil_tree   = config["TAXON_TREE"],
         ref_fasta  = TAXON_PLACEMENT + "reference.fasta",
@@ -1193,7 +1193,7 @@ rule epa_placement_taxon:
         """
 
 
-rule gappa_heat_tree_taxon:
+rule gappa_heat_tree_Taxon:
     input:
         jplace = TAXON_PLACEMENT + "epa_result.jplace"
     output:
@@ -1222,7 +1222,7 @@ rule gappa_heat_tree_taxon:
         """
 
 
-rule gappa_assign_taxon:
+rule gappa_assign_Taxon:
     input:
         jplace = TAXON_PLACEMENT + "epa_result.jplace",
         clades = config["CLADES_TAXON"]
@@ -1253,7 +1253,7 @@ rule gappa_assign_taxon:
         """
 
 
-rule gappa_lwr_edpl_taxon:
+rule gappa_lwr_edpl_Taxon:
     input:
         jplace = TAXON_PLACEMENT + "epa_result.jplace"
     output:
@@ -1377,7 +1377,7 @@ rule filter_Clade3_placements:
 rule extract_Clade1_seqs:
     input:
         tsv   = TAXON_PLACEMENT + "filtered_CLADE1_LWR_EDPL.tsv",
-        fasta = TAXON_PLACEMENT + "taxon_seqs.fasta"
+        fasta = TAXON_PLACEMENT + "Taxon_seqs.fasta"
     output:
         fasta = CLADE1_PLACEMENT + "Clade1_seqs.fasta"
     conda:
@@ -1643,7 +1643,7 @@ rule extract_Clade1_final_seqs:
 rule extract_Clade2_seqs:
     input:
         tsv   = TAXON_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv",
-        fasta = TAXON_PLACEMENT + "taxon_seqs.fasta"
+        fasta = TAXON_PLACEMENT + "Taxon_seqs.fasta"
     output:
         fasta = CLADE2_PLACEMENT + "Clade2_seqs.fasta"
     conda:
@@ -1909,7 +1909,7 @@ rule extract_Clade2_final_seqs:
 rule extract_Clade3_seqs:
     input:
         tsv   = TAXON_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv",
-        fasta = TAXON_PLACEMENT + "taxon_seqs.fasta"
+        fasta = TAXON_PLACEMENT + "Taxon_seqs.fasta"
     output:
         fasta = CLADE3_PLACEMENT + "Clade3_seqs.fasta"
     conda:
@@ -2181,7 +2181,7 @@ rule prepare_phyloseq_objects:
         Clade1 = CLADE1_PLACEMENT + "filtered_Clade1_LWR_EDPL.tsv",
         Clade2 = CLADE2_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv",
         Clade3 = CLADE3_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv",
-        taxon_counts = MERGED + "export/table/merged-taxon-table.tsv",
+        Taxon_counts = MERGED + "export/table/merged-Taxon-table.tsv",
         unassigned_counts = MERGED + "export/table/merged-unassigned-table.tsv"
     output:
         taxonomy = FIGURES + "pp_taxonomy.tsv",
@@ -2200,7 +2200,7 @@ rule prepare_phyloseq_objects:
         Rscript scripts/prepare_phyloseq_objects.R \
             {input.metadata} \
             {input.Clade1} {input.Clade2} {input.Clade3} \
-            {input.taxon_counts} {input.unassigned_counts} \
+            {input.Taxon_counts} {input.unassigned_counts} \
             {output.taxonomy} {output.counts} {output.meta_clean} \
             {output.meta_rds} {output.tax_rds} {output.otu_rds} {output.ps_rds} \
             {input.envo_map} {output.missing_report}
