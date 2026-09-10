@@ -29,6 +29,15 @@ CLADE3_PLACEMENT  = OUTPUT + "_Clade3_placement/"
 # R figure generation (phyloseq objects, taxa barplots, sample map)
 FIGURES = OUTPUT + "_figures/"
 
+# Papara loading
+PAPARA_MODULE = config.get("papara_module")
+PAPARA_SETUP = (
+    f"module load {PAPARA_MODULE}"
+    if PAPARA_MODULE
+    else ":"
+)
+PAPARA_EXECUTABLE = config.get("papara_executable", "papara")
+
 # clade tree configuration
 MAX_CLADE = int(config.get("max_clade", 3))
 if MAX_CLADE not in (1, 2, 3):
@@ -795,7 +804,9 @@ rule papara_unassigned_seqs:
     output:
         papara_alignment = PLACEMENT + "papara_alignment.default"
     params:
-        placement_dir = PLACEMENT
+        placement_dir = PLACEMENT,
+        papara_setup = PAPARA_SETUP,
+        papara_executable = PAPARA_EXECUTABLE
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -811,7 +822,8 @@ rule papara_unassigned_seqs:
 
         cd {params.placement_dir}
 
-        module load papara_nt/2.5
+        {params.papara_setup}
+        {params.papara_executable} \
         papara \
             -t $(basename {input.euk_tree}) \
             -s $(basename {input.msa_phylip}) \
@@ -1079,7 +1091,9 @@ rule papara_Taxon:
     output:
         papara_alignment = TAXON_PLACEMENT + "papara_alignment.default"
     params:
-        placement_dir = TAXON_PLACEMENT
+        placement_dir = TAXON_PLACEMENT,
+        papara_setup = PAPARA_SETUP,
+        papara_executable = PAPARA_EXECUTABLE
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -1094,7 +1108,8 @@ rule papara_Taxon:
 
         cd {params.placement_dir}
 
-        module load papara_nt/2.5
+        {params.papara_setup}
+        {params.papara_executable} \
         papara \
             -t $(basename {input.Taxon_tree}) \
             -s $(basename {input.msa_phylip}) \
@@ -1403,7 +1418,9 @@ rule papara_Clade1:
     output:
         papara_alignment = CLADE1_PLACEMENT + "papara_alignment.default"
     params:
-        placement_dir = CLADE1_PLACEMENT
+        placement_dir = CLADE1_PLACEMENT,
+        papara_setup = PAPARA_SETUP,
+        papara_executable = PAPARA_EXECUTABLE
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -1418,7 +1435,8 @@ rule papara_Clade1:
 
         cd {params.placement_dir}
 
-        module load papara_nt/2.5
+        {params.papara_setup}
+        {params.papara_executable} \
         papara \
             -t $(basename {input.tree}) \
             -s $(basename {input.msa_phylip}) \
@@ -1669,7 +1687,9 @@ rule papara_Clade2:
     output:
         papara_alignment = CLADE2_PLACEMENT + "papara_alignment.default"
     params:
-        placement_dir = CLADE2_PLACEMENT
+        placement_dir = CLADE2_PLACEMENT,
+        papara_setup = PAPARA_SETUP,
+        papara_executable = PAPARA_EXECUTABLE
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -1684,7 +1704,8 @@ rule papara_Clade2:
 
         cd {params.placement_dir}
 
-        module load papara_nt/2.5
+        {params.papara_setup}
+        {params.papara_executable} \
         papara \
             -t $(basename {input.tree}) \
             -s $(basename {input.msa_phylip}) \
@@ -1935,7 +1956,9 @@ rule papara_Clade3:
     output:
         papara_alignment = CLADE3_PLACEMENT + "papara_alignment.default"
     params:
-        placement_dir = CLADE3_PLACEMENT
+        placement_dir = CLADE3_PLACEMENT,
+        papara_setup = PAPARA_SETUP,
+        papara_executable = PAPARA_EXECUTABLE
     threads: 17
     conda:
         "envs/phylo_placement.yaml"
@@ -1951,6 +1974,8 @@ rule papara_Clade3:
         cd {params.placement_dir}
 
         module load papara_nt/2.5
+        {params.papara_setup}
+        {params.papara_executable} \
         papara \
             -t $(basename {input.tree}) \
             -s $(basename {input.msa_phylip}) \
@@ -2185,9 +2210,9 @@ rule prepare_phyloseq_objects:
     input:
         metadata = "documents/merged/merged_metadata.csv",
         envo_map = "reference/ENVO_IDs.csv",
-        Clade1 = CLADE1_PLACEMENT + "filtered_CLADE1_LWR_EDPL.tsv",
-        Clade2 = CLADE2_PLACEMENT + "filtered_CLADE2_LWR_EDPL.tsv",
-        Clade3 = CLADE3_PLACEMENT + "filtered_CLADE3_LWR_EDPL.tsv",
+        Clade1 = CLADE1_PLACEMENT + "filtered_Clade1_LWR_EDPL.tsv",
+        Clade2 = CLADE2_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv",
+        Clade3 = CLADE3_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv",
         Taxon_counts = MERGED + "export/table/merged-Taxon-table.tsv",
         unassigned_counts = MERGED + "export/table/merged-unassigned-table.tsv"
     output:
