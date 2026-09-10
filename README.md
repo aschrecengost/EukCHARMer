@@ -76,7 +76,22 @@ Snakemake/
 │   ├── eukaryotic_reference_tax.txt**
 │   ├── eukaryotic_reference_tree.fasta**
 │   ├── eukaryotic_reference_tree.phy**
-│   └── ***
+│   ├── Taxon_tree.tree**
+│   ├── Taxon_reference_tax.txt**
+│   ├── Taxon_reference_tree.fasta**
+│   ├── Taxon_reference_tree.phy**
+│   ├── Clade1_tree.tree***
+│   ├── Clade1_reference_tax.txt***
+│   ├── Clade1_reference_tree.fasta***
+│   ├── Clade1_reference_tree.phy***
+│   ├── Clade2_tree.tree***
+│   ├── Clade2_reference_tax.txt***
+│   ├── Clade2_reference_tree.fasta***
+│   ├── Clade2_reference_tree.phy**8
+│   ├── Clade3_tree.tree**8
+│   ├── Clade3_reference_tax.txt***
+│   ├── Clade3_reference_tree.fasta***
+│   └── Clade3_reference_tree.phy***
 ├── scripts/
 │   ├── clean_metadata.py
 │   ├── extract_fasta.py
@@ -103,7 +118,11 @@ Snakemake/
 
 \*\* Eukaryotic reference trees and files were obtained from (6).
 
-\*\*\* You must provide phylogenetic reference trees for your TOI. If you are surveying a taxonomic group within Ciliophora, we provide the relevant files: `ciliate_reference_tax.txt`, `ciliate_reference_tree.fasta`, `ciliate_reference_tree.phy`, which were obtained and prepared from (7). See the section ["How do I find or generate appropriate reference trees for phylogenetic placement?"](#how-do-i-find-or-generate-appropriate-reference-trees-for-phylogenetic-placement)
+\*\*\* You must provide phylogenetic reference trees for your TOI. If you are surveying a taxonomic group within Ciliophora, we provide the relevant files: `ciliate_reference_tax.txt`, `ciliate_reference_tree.fasta`, `ciliate_reference_tree.phy`, which were obtained and prepared from (7). You need to rename these to `Taxon_reference_tax.txt`, and so on, as detailed in the file tree.
+
+\*\*\* These are the relevant files for the clade trees. You can use 1-3 clade trees, depending on the groups you are interested in. 
+
+See the section ["How do I find or generate appropriate reference trees for phylogenetic placement?"](#how-do-i-find-or-generate-appropriate-reference-trees-for-phylogenetic-placement) for more information.
 
 
 ## Tutorial
