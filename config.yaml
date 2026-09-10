@@ -29,7 +29,7 @@ project_settings:
     minovlen_merge: 50
     p_trim_length:
     
-  # Example Project 3: Using V9 primers
+  # Example Project 3
   ProjectName3:
     SRAid: SRAid3
     primerF:
