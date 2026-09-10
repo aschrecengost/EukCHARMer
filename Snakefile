@@ -27,6 +27,36 @@ CLADE3_PLACEMENT  = OUTPUT + "_Clade3_placement/"
 # R figure generation (phyloseq objects, taxa barplots, sample map)
 FIGURES = OUTPUT + "_figures/"
 
+# clade tree configuration
+MAX_CLADE = int(config.get("max_clade", 3))
+if MAX_CLADE not in (1, 2, 3):
+    raise ValueError("max_clade must be 1, 2, or 3")
+
+CLADE_DIRS = [
+    CLADE1_PLACEMENT,
+    CLADE2_PLACEMENT,
+    CLADE3_PLACEMENT,
+]
+
+SELECTED_CLADE_TARGETS = [
+    target
+    for number, clade_dir in enumerate(CLADE_DIRS[:MAX_CLADE], start=1)
+    for target in (
+        clade_dir + "tree.svg",
+        clade_dir + f"Clade{number}_placed_seqs.fasta",
+    )
+]
+
+# The current R script requires results from all three clades.
+FIGURE_TARGETS = (
+    [
+        FIGURES + "taxa_barplot.pdf",
+        FIGURES + "sample_map.pdf",
+    ]
+    if MAX_CLADE == 3
+    else []
+)
+
 # ---- METADATA CLEANING CONFIG ----
 # For each target column name, list every raw name it might appear as across projects.
 # All aliases will be renamed to the target; duplicates are merged into one column.
@@ -130,18 +160,6 @@ rule all:
         cleaned = expand("documents/cleaned/{project}.csv", project=PROJECTS),
         merged_metadata = "documents/merged/merged_metadata.csv",
 
-        # R figure generation
-        figure_taxonomy = FIGURES + "pp_taxonomy.tsv",
-        figure_counts = FIGURES + "combined_count_table.tsv",
-        figure_meta_clean = FIGURES + "metadata_cleaned.csv",
-        figure_missing_report = FIGURES + "metadata_gaps.txt",
-        figure_metadata = FIGURES + "metadata_sample_data.rds",
-        figure_tax_rds = FIGURES + "tax_table.rds",
-        figure_otu_rds = FIGURES + "otu_table.rds",
-        figure_ps = FIGURES + "ps.rds",
-        figure_barplot = FIGURES + "taxa_barplot.pdf",
-        figure_map = FIGURES + "sample_map.pdf",
-
         # Phylogenetic placement outputs
         # changed these to _unassigned
         unassigned_epa_jplace = PLACEMENT + "epa_result.jplace",
@@ -162,40 +180,9 @@ rule all:
         taxa_lwr_histogram = TAXON_PLACEMENT + "lwr-histogram.csv",
         taxa_edpl_histogram = TAXON_PLACEMENT + "edpl_histogram.csv",
 
-        # Clade filtering
-        per_query_Clade1 = TAXON_PLACEMENT + "per_query_Clade1.tsv",
-        per_query_Clade2 = TAXON_PLACEMENT + "per_query_Clade2.tsv",
-        per_query_Clade3 = TAXON_PLACEMENT + "per_query_Clade3.tsv",
-        filtered_Clade1 = TAXON_PLACEMENT + "filtered_Clade1_LWR_EDPL.tsv",
-        filtered_Clade2 = TAXON_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv",
-        filtered_Clade3 = TAXON_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv",
-
-        # Clade1 placement outputs
-        Clade1_jplace = CLADE1_PLACEMENT + "epa_result.jplace",
-        Clade1_heat_tree = CLADE1_PLACEMENT + "tree.svg",
-        Clade1_per_query = CLADE1_PLACEMENT + "per_query.tsv",
-        Clade1_lwr = CLADE1_PLACEMENT + "lwr-histogram.csv",
-        Clade1_edpl = CLADE1_PLACEMENT + "edpl_histogram.csv",
-        Clade1_filtered = CLADE1_PLACEMENT + "filtered_CLADE1_LWR_EDPL.tsv",
-        Clade1_placed_seqs = CLADE1_PLACEMENT + "Clade1_placed_seqs.fasta",
-
-        # Clade2 placement outputs
-        Clade2_jplace = CLADE2_PLACEMENT + "epa_result.jplace",
-        Clade2_heat_tree = CLADE2_PLACEMENT + "tree.svg",
-        Clade2_per_query = CLADE2_PLACEMENT + "per_query.tsv",
-        Clade2_lwr = CLADE2_PLACEMENT + "lwr-histogram.csv",
-        Clade2_edpl = CLADE2_PLACEMENT + "edpl_histogram.csv",
-        Clade2_filtered = CLADE2_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv",
-        Clade2_placed_seqs = CLADE2_PLACEMENT + "Clade2_placed_seqs.fasta",
-
-        # Clade3 placement outputs
-        Clade3_jplace = CLADE3_PLACEMENT + "epa_result.jplace",
-        Clade3_heat_tree = CLADE3_PLACEMENT + "tree.svg",
-        Clade3_per_query = CLADE3_PLACEMENT + "per_query.tsv",
-        Clade3_lwr = CLADE3_PLACEMENT + "lwr-histogram.csv",
-        Clade3_edpl = CLADE3_PLACEMENT + "edpl_histogram.csv",
-        Clade3_filtered = CLADE3_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv",
-        Clade3_placed_seqs = CLADE3_PLACEMENT + "Clade3_placed_seqs.fasta",
+        # Clade specification and figure gen
+        selected_clades = SELECTED_CLADE_TARGETS,
+        figures = FIGURE_TARGETS
 
 
 rule download_runinfo:
