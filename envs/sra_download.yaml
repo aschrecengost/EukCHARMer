@@ -1,0 +1,10 @@
+name: fastq
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+
+dependencies:
+  - entrez-direct
+  - sra-tools=3.4.1
+  - pigz
