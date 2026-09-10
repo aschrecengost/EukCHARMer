@@ -1,13 +1,9 @@
 #!/usr/bin/env Rscript
 # Generate the taxa barplot and sample map.
-#
-# Adapted from the plotting sections of map_and_plot_snakemake.R:
 #  - barplot: samples merged by habitat type (env_2), relative abundance,
-#    filled by Family. The original's scale_fill_viridis() is given
-#    discrete = TRUE (Family is a discrete scale).
+#    filled by Family.
 #  - map: the "map of all samples" version (points from the cleaned metadata,
 #    not the phyloseq object), colored by env_2, shaped by shallow_deep.
-#  - View()/setwd()/summary() calls removed (non-interactive).
 #
 # Usage:
 #   Rscript generate_figures.R <ps.rds> <metadata_cleaned.csv> \
