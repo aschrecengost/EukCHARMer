@@ -47,12 +47,14 @@ visualization: "results/visualizations/"
 taxonomy_fasta: "reference/reference_database.qza"
 trained_ref_database: "reference/classifier.qza"
 REFFASTA: "reference/reference_database.qza"
-qiime_environment: "envs/qiime2-amplicon-2026.1-macos.yml"
+# choose qiime environment: for Linux/WSL: rachis-qiime2-linux-64-conda.yml
+# for MacOS: rachis-qiime2-osx-64-conda.yml
+qiime_environment: ""
 
 # 1 = Clade1 only
 # 2 = Clade1 and Clade2
 # 3 = Clade1, Clade2, and Clade3
-max_clade: 1
+max_clade: 
 
 # PaPaRa software loading
 # if running on HPC and loadind with module, 
