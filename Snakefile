@@ -824,7 +824,6 @@ rule papara_unassigned_seqs:
 
         {params.papara_setup}
         {params.papara_executable} \
-        papara \
             -t $(basename {input.euk_tree}) \
             -s $(basename {input.msa_phylip}) \
             -q $(basename {input.rep_seqs_unassigned_fasta}) \
@@ -1110,7 +1109,6 @@ rule papara_Taxon:
 
         {params.papara_setup}
         {params.papara_executable} \
-        papara \
             -t $(basename {input.Taxon_tree}) \
             -s $(basename {input.msa_phylip}) \
             -q $(basename {input.Taxon_seqs}) \
@@ -1437,7 +1435,6 @@ rule papara_Clade1:
 
         {params.papara_setup}
         {params.papara_executable} \
-        papara \
             -t $(basename {input.tree}) \
             -s $(basename {input.msa_phylip}) \
             -q $(basename {input.query_seqs}) \
@@ -1706,7 +1703,6 @@ rule papara_Clade2:
 
         {params.papara_setup}
         {params.papara_executable} \
-        papara \
             -t $(basename {input.tree}) \
             -s $(basename {input.msa_phylip}) \
             -q $(basename {input.query_seqs}) \
@@ -1976,7 +1972,6 @@ rule papara_Clade3:
         module load papara_nt/2.5
         {params.papara_setup}
         {params.papara_executable} \
-        papara \
             -t $(basename {input.tree}) \
             -s $(basename {input.msa_phylip}) \
             -q $(basename {input.query_seqs}) \
