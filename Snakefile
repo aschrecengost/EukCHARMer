@@ -628,7 +628,7 @@ rule merge_projects:
 rule export_Taxon:
     input:
         table_Taxon_merged = MERGED + "merged-Taxon-table.qza",
-        rep_Taxon_merged = MERGED + "merged-Taxoniophora-seqs.qza"
+        rep_Taxon_merged = MERGED + "merged-Taxon-seqs.qza"
     output:
         table_Taxon_biom = MERGED + "export/table/merged-Taxon-table.biom",
         table_Taxon_tsv = MERGED + "export/table/merged-Taxon-table.tsv",
@@ -1067,7 +1067,7 @@ rule papara_Taxon:
         """
         mkdir -p {params.placement_dir}
 
-        cp {input.cil_tree}   {params.placement_dir}
+        cp {input.Taxon_tree}   {params.placement_dir}
         cp {input.msa_phylip} {params.placement_dir}
         cp {input.msa_fasta}  {params.placement_dir}
         cp {input.clades}     {params.placement_dir}
@@ -1076,7 +1076,7 @@ rule papara_Taxon:
 
         module load papara_nt/2.5
         papara \
-            -t $(basename {input.cil_tree}) \
+            -t $(basename {input.Taxon_tree}) \
             -s $(basename {input.msa_phylip}) \
             -q $(basename {input.Taxon_seqs}) \
             -j {threads} \
@@ -1114,7 +1114,7 @@ rule epa_split_Taxon:
 rule raxml_evaluate_Taxon:
     input:
         ref_fasta = TAXON_PLACEMENT + "reference.fasta",
-        cil_tree  = config["TAXON_TREE"]
+        Taxon_tree  = config["TAXON_TREE"]
     output:
         best_model = TAXON_PLACEMENT + "reference.fasta.raxml.bestModel",
         best_tree  = TAXON_PLACEMENT + "reference.fasta.raxml.bestTree",
@@ -1129,14 +1129,14 @@ rule raxml_evaluate_Taxon:
     shell:
         """
         mkdir -p {params.placement_dir}
-        cp {input.cil_tree}  {params.placement_dir}
+        cp {input.Taxon_tree}  {params.placement_dir}
 
         cd {params.placement_dir}
 
         raxml-ng \
             --evaluate \
             --msa $(basename {input.ref_fasta}) \
-            --tree $(basename {input.cil_tree}) \
+            --tree $(basename {input.Taxon_tree}) \
             --model GTR+G \
             --threads {threads} --force perf_threads
 
@@ -1145,7 +1145,7 @@ rule raxml_evaluate_Taxon:
 
 rule epa_placement_Taxon:
     input:
-        cil_tree   = config["TAXON_TREE"],
+        Taxon_tree   = config["TAXON_TREE"],
         ref_fasta  = TAXON_PLACEMENT + "reference.fasta",
         query_fasta = TAXON_PLACEMENT + "query.fasta",
         best_model = TAXON_PLACEMENT + "reference.fasta.raxml.bestModel"
@@ -1162,7 +1162,7 @@ rule epa_placement_Taxon:
     shell:
         """
         mkdir -p {params.placement_dir}
-        cp {input.cil_tree}    {params.placement_dir}
+        cp {input.Taxon_tree}    {params.placement_dir}
 
         rm -f {params.placement_dir}epa_result.jplace \
               {params.placement_dir}epa_info.log
@@ -1172,7 +1172,7 @@ rule epa_placement_Taxon:
         epa-ng \
             --filter-acc-lwr {params.filter_acc_lwr} \
             --filter-max {params.filter_max} \
-            -t $(basename {input.cil_tree}) \
+            -t $(basename {input.Taxon_tree}) \
             -s $(basename {input.ref_fasta}) \
             -q $(basename {input.query_fasta}) \
             --model $(basename {input.best_model})
@@ -1281,7 +1281,7 @@ rule filter_Clade1:
     output:
         tsv = TAXON_PLACEMENT + "per_query_Clade1.tsv"
     params:
-        search_term = config["search_term_clade1"]
+        search_term = config["search_term_Clade1"]
     conda:
         "envs/pysradb.yaml"
     script:
@@ -1294,7 +1294,7 @@ rule filter_Clade2:
     output:
         tsv = TAXON_PLACEMENT + "per_query_Clade2.tsv"
     params:
-        search_term = config["search_term_clade2"]
+        search_term = config["search_term_Clade2"]
     conda:
         "envs/pysradb.yaml"
     script:
@@ -1307,7 +1307,7 @@ rule filter_Clade3:
     output:
         tsv = TAXON_PLACEMENT + "per_query_Clade3.tsv"
     params:
-        search_term = config["search_term_clade3"]
+        search_term = config["search_term_Clade3"]
     conda:
         "envs/pysradb.yaml"
     script:
@@ -2165,9 +2165,9 @@ rule prepare_phyloseq_objects:
     input:
         metadata = "documents/merged/merged_metadata.csv",
         envo_map = "reference/ENVO_IDs.csv",
-        Clade1 = CLADE1_PLACEMENT + "filtered_Clade1_LWR_EDPL.tsv",
-        Clade2 = CLADE2_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv",
-        Clade3 = CLADE3_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv",
+        Clade1 = CLADE1_PLACEMENT + "filtered_CLADE1_LWR_EDPL.tsv",
+        Clade2 = CLADE2_PLACEMENT + "filtered_CLADE2_LWR_EDPL.tsv",
+        Clade3 = CLADE3_PLACEMENT + "filtered_CLADE3_LWR_EDPL.tsv",
         Taxon_counts = MERGED + "export/table/merged-Taxon-table.tsv",
         unassigned_counts = MERGED + "export/table/merged-unassigned-table.tsv"
     output:
