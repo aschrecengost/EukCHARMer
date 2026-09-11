@@ -196,7 +196,6 @@ rule all:
         selected_clades = SELECTED_CLADE_TARGETS,
         figures = FIGURE_TARGETS
 
-
 rule download_runinfo:
     output:
         runinfo = RAW_DATA + "{project}/runinfo.csv"
@@ -221,6 +220,7 @@ rule get_runs:
         cut -d ',' -f 1 {input.runinfo} | tail -n +2 > {output.SRRnumbers}
         """
 
+
 rule fasterq_dump:
     input:
         SRRnumbers = RAW_DATA + "{project}/SRR.numbers"
@@ -229,35 +229,46 @@ rule fasterq_dump:
     params:
         sra_dir = SRA_CACHE + "{project}",
         temp_dir = FASTERQ_TEMP + "{project}"
+    log:
+        RAW_DATA + "{project}/logs/fasterq_dump.log"
     threads: 10
     conda:
         "envs/sra_download.yaml"
     shell:
         """
-        mkdir -p "{output.rawreads}" "{params.sra_dir}" "{params.temp_dir}"
+        mkdir -p \
+            "{output.rawreads}" \
+            "{params.sra_dir}" \
+            "{params.temp_dir}" \
+            "$(dirname "{log}")"
 
-        cr=$(printf '\\r')
-        tr -d "$cr" < "{input.SRRnumbers}" |
-        while IFS= read -r srr; do
-            [ -n "$srr" ] || continue
+        (
+            cr=$(printf '\\r')
 
-            echo "Downloading $srr"
+            tr -d "$cr" < "{input.SRRnumbers}" |
+            while IFS= read -r srr; do
+                [ -n "$srr" ] || continue
 
-            prefetch "$srr" \
-                --output-directory "{params.sra_dir}/$srr"
+                echo "Downloading $srr"
 
-            fasterq-dump "{params.sra_dir}/$srr" \
-                --threads {threads} \
-                --split-files \
-                --outdir "{output.rawreads}" \
-                --temp "{params.temp_dir}"
+                prefetch "$srr" \
+                    --output-directory "{params.sra_dir}"
 
-            for fastq in "{output.rawreads}/$srr"*.fastq; do
-                [ -e "$fastq" ] || continue
-                pigz -p {threads} "$fastq"
+                fasterq-dump \
+                    "{params.sra_dir}/$srr/$srr.sra" \
+                    --threads {threads} \
+                    --split-files \
+                    --outdir "{output.rawreads}" \
+                    --temp "{params.temp_dir}"
+
+                for fastq in "{output.rawreads}/$srr"*.fastq; do
+                    [ -e "$fastq" ] || continue
+                    pigz -p {threads} "$fastq"
+                done
             done
-        done
+        ) 2>&1 | tee "{log}"
         """
+
 
 rule rename_files_import:
     input:
