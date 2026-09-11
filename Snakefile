@@ -316,7 +316,8 @@ rule rm_primers:
     input:
         q2_import = OUTPUT + "{project}/{project}-PE-demux.qza"
     output:
-        q2_primerRM = OUTPUT + "{project}/{project}-PE-demux-noprimer.qza"
+        q2_primerRM = OUTPUT + "{project}/{project}-PE-demux-noprimer.qza",
+        q2_primerRM_stats = OUTPUT + "{project}/logs/{project}-primerRM-stats.qza"
     log:
         OUTPUT + "{project}/logs/{project}_primer_q2.log"
     conda:
@@ -339,7 +340,8 @@ rule rm_primers:
            --p-match-adapter-wildcards \
            --p-match-read-wildcards \
            --verbose \
-           --o-trimmed-sequences {output.q2_primerRM}
+           --o-trimmed-sequences {output.q2_primerRM} \
+           --o-stats {output.q2_primerRM_stats}
         """
 
 
