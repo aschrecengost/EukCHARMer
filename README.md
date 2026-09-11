@@ -57,6 +57,12 @@ Then run the Snakefile with:
 snakemake -s Snakefile --cores all --use-conda --rerun-incomplete
 ```
 
+If you want to only run the QIIME2 steps, you can use:
+
+```
+snakemake preplacement -s Snakefile --cores all --use-conda --rerun-incomplete
+```
+
 Every rule that needs a specific software environment declares its own `conda:` environment file (see `envs/`), so `--use-conda` builds each one automatically the first time it's needed - you do not need to create these environments by hand.
 
 ### Folder setup:
