@@ -30,7 +30,7 @@ CLADE3_PLACEMENT  = OUTPUT + "_Clade3_placement/"
 # R figure generation (phyloseq objects, taxa barplots, sample map)
 FIGURES = OUTPUT + "_figures/"
 
-# Papara loading
+# ---- PAPARA CONFIGURATION ----
 PAPARA_MODULE = config.get("papara_module")
 PAPARA_SETUP = (
     f"module load {PAPARA_MODULE}"
@@ -38,8 +38,9 @@ PAPARA_SETUP = (
     else ":"
 )
 PAPARA_EXECUTABLE = config.get("papara_executable", "papara")
+# ---- END PAPARA CONFIGURATION ----
 
-# clade tree configuration
+# ---- CLADE TREE CONFIGURATION ----
 MAX_CLADE = int(config.get("max_clade", 3))
 if MAX_CLADE not in (1, 2, 3):
     raise ValueError("max_clade must be 1, 2, or 3")
@@ -68,6 +69,7 @@ FIGURE_TARGETS = (
     if MAX_CLADE == 3
     else []
 )
+# ---- END CLADE TREE CONFIGURATION ----
 
 # ---- METADATA CLEANING CONFIG ----
 # For each target column name, list every raw name it might appear as across projects.
@@ -121,56 +123,63 @@ def get_setting(wildcards, key, default=None):
     return config.get(key, default)
 
 
+# Targets for everything up to (but not including) phylogenetic placement.
+# Shared by `rule all` and `rule preplacement` so the list only lives in one place.
+PREPLACEMENT_TARGETS = dict(
+    # Download and import - for all projects
+    rawreads = expand(RAW_DATA + "{project}/reads", project=PROJECTS),
+    q2_import = expand(OUTPUT + "{project}/{project}-PE-demux.qza", project=PROJECTS),
+
+    # Processing - for all projects
+    q2_primerRM = expand(OUTPUT + "{project}/{project}-PE-demux-noprimer.qza", project=PROJECTS),
+    q2_merged = expand(OUTPUT + "{project}/{project}-PE-demux-noprimer-merged.qza", project=PROJECTS),
+    q2_qualfilter = expand(OUTPUT + "{project}/{project}-PE-demux-noprimer-merged-filtered.qza", project=PROJECTS),
+
+    # Core outputs - for all projects
+    table = expand(OUTPUT + "{project}/{project}-table.qza", project=PROJECTS),
+    rep = expand(OUTPUT + "{project}/{project}-rep-seqs.qza", project=PROJECTS),
+    stats = expand(OUTPUT + "{project}/{project}-deblur-stats.qza", project=PROJECTS),
+    sklearn = expand(OUTPUT + "{project}/{project}-tax_sklearn.qza", project=PROJECTS),
+
+    # Visualizations - for all projects
+    raw = expand(VISUALIZATION + "{project}/{project}-PE-demux.qzv", project=PROJECTS),
+    primer = expand(VISUALIZATION + "{project}/{project}-PE-demux-noprimer.qzv", project=PROJECTS),
+    merged = expand(VISUALIZATION + "{project}/{project}-PE-demux-noprimer-merged.qzv", project=PROJECTS),
+    filtered = expand(VISUALIZATION + "{project}/{project}-PE-demux-noprimer-merged-filtered.qzv", project=PROJECTS),
+    deblur_stats = expand(VISUALIZATION + "{project}/{project}-deblur-stats.qzv", project=PROJECTS),
+
+    # Merged outputs
+    merged_table = MERGED + "merged-table.qza",
+    merged_seqs = MERGED + "merged-seqs.qza",
+    merged_taxa = MERGED + "merged-taxa.qza",
+
+    # Taxon merged artifacts and exports
+    merged_Taxon_table = MERGED + "merged-Taxon-table.qza",
+    merged_Taxon_seqs = MERGED + "merged-Taxon-seqs.qza",
+    table_Taxon_biom = MERGED + "export/table/merged-Taxon-table.biom",
+    table_Taxon_tsv = MERGED + "export/table/merged-Taxon-table.tsv",
+    rep_seqs_Taxon_fasta = MERGED + "export/merged-Taxon-seqs.fasta",
+
+    # Unassigned merged artifacts and exports
+    merged_unassigned_table = MERGED + "merged-unassigned-table.qza",
+    merged_unassigned_seqs = MERGED + "merged-unassigned-seqs.qza",
+    table_unassigned_biom = MERGED + "export/table/merged-unassigned-table.biom",
+    table_unassigned_tsv = MERGED + "export/table/merged-unassigned-table.tsv",
+    rep_seqs_unassigned_fasta = MERGED + "export/merged-unassigned-seqs.fasta",
+
+    # Taxonomy export
+    merged_table_tax = MERGED + "export/merged-taxonomy.tsv",
+
+    # Metadata
+    metadata = expand("documents/raw/{project}.csv", project=PROJECTS),
+    cleaned = expand("documents/cleaned/{project}.csv", project=PROJECTS),
+    merged_metadata = "documents/merged/merged_metadata.csv",
+)
+
+
 rule all:
     input:
-        # Download and import - for all projects
-        rawreads = expand(RAW_DATA + "{project}/reads", project=PROJECTS),
-        q2_import = expand(OUTPUT + "{project}/{project}-PE-demux.qza", project=PROJECTS),
-
-        # Processing - for all projects
-        q2_primerRM = expand(OUTPUT + "{project}/{project}-PE-demux-noprimer.qza", project=PROJECTS),
-        q2_merged = expand(OUTPUT + "{project}/{project}-PE-demux-noprimer-merged.qza", project=PROJECTS),
-        q2_qualfilter = expand(OUTPUT + "{project}/{project}-PE-demux-noprimer-merged-filtered.qza", project=PROJECTS),
-
-        # Core outputs - for all projects
-        table = expand(OUTPUT + "{project}/{project}-table.qza", project=PROJECTS),
-        rep = expand(OUTPUT + "{project}/{project}-rep-seqs.qza", project=PROJECTS),
-        stats = expand(OUTPUT + "{project}/{project}-deblur-stats.qza", project=PROJECTS),
-        sklearn = expand(OUTPUT + "{project}/{project}-tax_sklearn.qza", project=PROJECTS),
-
-        # Visualizations - for all projects
-        raw = expand(VISUALIZATION + "{project}/{project}-PE-demux.qzv", project=PROJECTS),
-        primer = expand(VISUALIZATION + "{project}/{project}-PE-demux-noprimer.qzv", project=PROJECTS),
-        merged = expand(VISUALIZATION + "{project}/{project}-PE-demux-noprimer-merged.qzv", project=PROJECTS),
-        filtered = expand(VISUALIZATION + "{project}/{project}-PE-demux-noprimer-merged-filtered.qzv", project=PROJECTS),
-        deblur_stats = expand(VISUALIZATION + "{project}/{project}-deblur-stats.qzv", project=PROJECTS),
-
-        # Merged outputs
-        merged_table = MERGED + "merged-table.qza",
-        merged_seqs = MERGED + "merged-seqs.qza",
-        merged_taxa = MERGED + "merged-taxa.qza",
-
-        # Taxon merged artifacts and exports
-        merged_Taxon_table = MERGED + "merged-Taxon-table.qza",
-        merged_Taxon_seqs = MERGED + "merged-Taxon-seqs.qza",
-        table_Taxon_biom = MERGED + "export/table/merged-Taxon-table.biom",
-        table_Taxon_tsv = MERGED + "export/table/merged-Taxon-table.tsv",
-        rep_seqs_Taxon_fasta = MERGED + "export/merged-Taxon-seqs.fasta",
-
-        # Unassigned merged artifacts and exports
-        merged_unassigned_table = MERGED + "merged-unassigned-table.qza",
-        merged_unassigned_seqs = MERGED + "merged-unassigned-seqs.qza",
-        table_unassigned_biom = MERGED + "export/table/merged-unassigned-table.biom",
-        table_unassigned_tsv = MERGED + "export/table/merged-unassigned-table.tsv",
-        rep_seqs_unassigned_fasta = MERGED + "export/merged-unassigned-seqs.fasta",
-
-        # Taxonomy export
-        merged_table_tax = MERGED + "export/merged-taxonomy.tsv",
-
-        # Metadata
-        metadata = expand("documents/raw/{project}.csv", project=PROJECTS),
-        cleaned = expand("documents/cleaned/{project}.csv", project=PROJECTS),
-        merged_metadata = "documents/merged/merged_metadata.csv",
+        **PREPLACEMENT_TARGETS,
 
         # Phylogenetic placement outputs
         # changed these to _unassigned
@@ -196,6 +205,12 @@ rule all:
         selected_clades = SELECTED_CLADE_TARGETS,
         figures = FIGURE_TARGETS
 
+
+rule preplacement:
+    # Run everything up to (but not including) phylogenetic placement:
+    #   snakemake preplacement --cores N --use-conda
+    input:
+        **PREPLACEMENT_TARGETS,
 rule download_runinfo:
     output:
         runinfo = RAW_DATA + "{project}/runinfo.csv"
