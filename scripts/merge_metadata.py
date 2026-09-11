@@ -1,6 +1,13 @@
+from pathlib import Path
 import pandas as pd
-import os
-is.makedirs("documents/merged", exist_ok=True)
-df = pd.concat([pd.read_csv(f) for f in input.cleaned], ignore_index=True)
-df.to_csv(output.merged, index=False)
-print(f"Merged {len(input.cleaned)} projects, {len(df)} total rows")
+
+input_files = list(snakemake.input.cleaned)
+output_file = Path(str(snakemake.output.merged))
+
+output_file.parent.mkdir(parents=True, exist_ok=True)
+
+dataframes = [pd.read_csv(file) for file in input_files]
+merged = pd.concat(dataframes, ignore_index=True, sort=False)
+merged.to_csv(output_file, index=False)
+
+print(f"Merged {len(input_files)} projects and {len(merged)} total rows")
