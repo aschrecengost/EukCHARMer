@@ -114,15 +114,13 @@ Snakemake/
 ```
 **data/, results/, and visualization/ folders will populate while the pipeline is running and their names are specified in the config.yaml file (raw_data, output, and visualization).**
 
-\* For `classifier.qza`, we used a taxonomic classifier trained on PR2 [PR2](https://pr2-database.org/) v5.1.1; [instructions to train your own classifier are here](#generating-the-large-reference-files-yourself). The QIIME2 version that you are running must be the same as the one you use to train the classifier. Similarly, the `reference_database.fasta` and `reference_database.qza` are from PR2 v5.1.1 and obtained with `qiime rescript get-pr2-data`. These three files are excluded from the git repo (see `.gitignore`) because they're too large to distribute via git.
+\* For `classifier.qza`, we used a taxonomic classifier trained on PR2 [PR2](https://pr2-database.org/) v5.1.1; [instructions to train your own classifier are here](#generating-the-large-reference-files-yourself). The QIIME2 version that you are running must be the same as the one you use to train the classifier. We also generated the required files `reference_database.fasta` and `reference_database.qza`  from PR2 v5.1.1 and obtained with `qiime rescript get-pr2-data`. These three files are excluded from the git repo (see `.gitignore`) because they're too large to distribute via git, so you need to generate them yourself.
 
 \*\* Eukaryotic reference trees and files were obtained from (6).
 
 \*\*\* You must provide phylogenetic reference trees for your TOI. If you are surveying a taxonomic group within Ciliophora, we provide the relevant files: `ciliate_reference_tax.txt`, `ciliate_reference_tree.fasta`, `ciliate_reference_tree.phy`, which were obtained and prepared from (7). You need to rename these to `Taxon_reference_tax.txt`, and so on, as detailed in the file tree.
 
-\*\*\* These are the relevant files for the clade trees. You can use 1-3 clade trees, depending on the groups you are interested in. 
-
-See the section ["How do I find or generate appropriate reference trees for phylogenetic placement?"](#how-do-i-find-or-generate-appropriate-reference-trees-for-phylogenetic-placement) for more information.
+\*\*\* These are the relevant files for the clade trees. You can use 1-3 clade trees, depending on the groups you are interested in. See the section ["How do I find or generate appropriate reference trees for phylogenetic placement?"](#how-do-i-find-or-generate-appropriate-reference-trees-for-phylogenetic-placement) for more information.
 
 
 ## Tutorial
@@ -136,16 +134,17 @@ Everything that runs *inside* a Snakemake rule - QIIME2, `epa-ng`, `gappa`, `rax
 The things that are *not* handled this way, and that you are responsible for having on the machine that launches the pipeline:
 - **Snakemake** itself and **conda** (see [Setup](#setup) above for install links).
 - **PaPaRa** must be installed separately or made available by an HPC administrator: see [Setup](#setup)
-- **`reference/reference_database.fasta`, `reference/reference_database.qza`, and `reference/classifier.qza`** - these three files are excluded from the git repo (see `.gitignore`) because they're too large to distribute via git. See the [next section](generating-the-large-reference-files-yourself) for how to generate them yourself; it only needs to be done once.
+- **`reference/reference_database.fasta`, `reference/reference_database.qza`, and `reference/classifier.qza`**. See the [next section](generating-the-large-reference-files-yourself) for how to generate them yourself; it only needs to be done once.
 
 If you're on an HPC that uses Environment Modules/Lmod, you'll also need to load `conda` itself via a module before the `snakemake`/`conda` commands are available - check with your cluster's documentation. `submit.sh` has commented-out `module load` lines showing what we use on our HPC as a starting point.
 
 #### Generating the large reference files yourself
 
-These are built from [PR2](https://pr2-database.org/) via QIIME2's `rescript` plugin, using the exact same `envs/qiime2-amplicon-2026.1.yaml` environment the rest of the pipeline uses (important - see the note on version-matching below). Build and activate that environment once:
+These are built from [PR2](https://pr2-database.org/) via QIIME2's `rescript` plugin, using the exact same QIIME2 environment the rest of the pipeline uses. Build and activate that environment once:
 
 ```
-conda env create -f envs/qiime2-amplicon-2026.1.yaml -n qiime2-amplicon-2026.1
+# use envs/rachis-qiime2-osx-64-conda.yml if you are running on MacOS
+conda env create -f envs/rachis-qiime2-linux-64-conda.yml -n qiime2-amplicon-2026.1
 conda activate qiime2-amplicon-2026.1
 ```
 
@@ -191,9 +190,9 @@ Then there is a shared settings section, which is where you will detail the loca
 
 - **`p_include_unassigned`, `p_include_taxa`** - In `qiime taxa filter-table`/`filter-seqs` `--p-include` values are used to filter all of the denoised sequences from each project for downstream processing. We include unassigned sequences because phylogenetic placement is often able to assign reads where pairwise methods fail.
     - We set `p_include_unassigned` to `Unassigned,Eukaryota,Eukaryota;TSAR,Eukaryota;TSAR;Alveolata` and `p_inlcude_taxa` to `Ciliophora` because we wanted to obtain ciliate sequences; **you need to change these values based on your TOI**.
-- **`search_term_taxa`, `search_term_clade1`, `search_term_clade2`, `search_term_clade3`** - the taxopath substrings used to extract placements from each placement step. `search_term_taxa` is used to extract placements from the Eukaryote tree. Sequences assigned to this group will then be placed onto the Taxon tree, and then placements from that tree are extracted with `search_term_clade1`, and optionally `search_term_clade2` and `search_term_clade3`, and then placed on their corresponding Clade trees.
+- **`search_term_taxa`, `search_term_clade1`, `search_term_clade2`, `search_term_clade3`** - the taxopath substrings used to extract placements from each placement step. `search_term_taxa` is used to extract placements from the Eukaryote tree. Sequences assigned to this group will then be placed onto the Taxon tree, and then placements from that tree are extracted with `search_term_clade1`, and optionally `search_term_clade2` and `search_term_clade3`, and then placed on their corresponding Clade trees. **You need to change these values based on your TOI.**
     - In our example, `search_term_taxa` = `Ciliophora`, `search_term_clade1` = `Armophorea`, `search_term_clade2` = `Plagiopylea`, `search_term_clade3` = `Cyclidium`.
-- **`EUK_TREE`, `MSA_FASTA_EUK`, `MSA_PHYLIP_EUK`, `CLADES_EUKS`** and the equivalent `TAXON_*`, `CLADE1_*`, `CLADE2_*`, `CLADE3_*` blocks - the tree/alignment/taxonomy files for each phylogenetic placement step. See ["How do I find or generate appropriate reference trees for phylogenetic placement?"](#how-do-i-find-or-generate-appropriate-reference-trees-for-phylogenetic-placement) for how to build your own set for a different TOI).
+- **`EUK_TREE`, `MSA_FASTA_EUK`, `MSA_PHYLIP_EUK`, `CLADES_EUKS`** and the equivalent `TAXON_*`, `CLADE1_*`, `CLADE2_*`, `CLADE3_*` blocks - the tree/alignment/taxonomy files for each phylogenetic placement step. See ["How do I find or generate appropriate reference trees for phylogenetic placement?"](#how-do-i-find-or-generate-appropriate-reference-trees-for-phylogenetic-placement) for how to build your own set for a different TOI.
 - **`max_clade`** - set this = to the number of clade trees you are using (1, 2, or 3)
 - **`papara_module` and `papara_executable`** - if running locally, `papara_module` is set to "null". If running on HPC, change this value to the command used to load (e.g. `module load papara`)
 - **`qiime_environment`** - you must specify which QIIME2 environment file to use to build your conda environment, depending on if you are running on HPC (Linux), or MacOS (Mac), or WSL (Linux).
@@ -273,7 +272,10 @@ Each placement step requires users to provide 4 files:
 - the reference `.tree` file (`_TREE`), and
 - reference taxonomic information in a `.txt` file (`CLADES_`)
 
-You can generate your own reference trees or use published trees if they are available. For example, we used published trees and alignments from (6), (7), and (9). For the remaining clade trees, we generated our own by curating 18S rRNA gene datasets based on the literature and dereplicating based on 99% identity with the aim of including one sequence per species. These sequences were aligned with MAFFT and phylogenetic trees generated with RAxML. **Make sure that the trees are rooted appropriately**. One way to root trees is in a program such as FigTree. For the reference taxonomic information, we generated a file in which one column contained the label of each branch in the tree, and the other column contained a text string detailing the taxonomy of each branch. For example, one row looked like this: `Trimyema_compressum_AB285526    Eukaryota;Ciliophora;Plagiopylea;Plagiopylida;Trimyemidae;Trimyema;Trimyema_compressum_AB285526`. For more details, see ref. (3). 
+You can generate your own reference trees or use published trees if they are available. For example, we used published trees and alignments from (6), (7), and (9). For the remaining clade trees, we generated our own by curating 18S rRNA gene datasets based on the literature and dereplicating based on 99% identity with the aim of including one sequence per species. These sequences were aligned with MAFFT and phylogenetic trees generated with RAxML. 
+- **Make sure that the trees are rooted appropriately**. One way to root trees is in a program such as FigTree.
+- For the reference taxonomic information, we generated a file in which one column contained the label of each branch in the tree, and the other column contained a text string detailing the taxonomy of each branch. For example, one row looked like this: `Trimyema_compressum_AB285526    Eukaryota;Ciliophora;Plagiopylea;Plagiopylida;Trimyemidae;Trimyema;Trimyema_compressum_AB285526`.
+- For more details, see ref. (3). 
 
 
 ## References:
