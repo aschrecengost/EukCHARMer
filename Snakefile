@@ -945,7 +945,8 @@ rule raxml_evaluate:
             --msa $(basename {input.ref_fasta}) \
             --tree $(basename {input.euk_tree}) \
             --model GTR+G \
-            --threads {threads} --force perf_threads
+            --threads {threads} --force perf_threads \
+            --redo
 
         """
 
@@ -1230,7 +1231,8 @@ rule raxml_evaluate_Taxon:
             --msa $(basename {input.ref_fasta}) \
             --tree $(basename {input.Taxon_tree}) \
             --model GTR+G \
-            --threads {threads} --force perf_threads
+            --threads {threads} --force perf_threads \
+            --redo
 
         """
 
@@ -1556,7 +1558,8 @@ rule raxml_evaluate_Clade1:
             --msa $(basename {input.ref_fasta}) \
             --tree $(basename {input.tree}) \
             --model GTR+G \
-            --threads {threads} --force perf_threads
+            --threads {threads} --force perf_threads \
+            --redo
 
         """
 
@@ -1824,7 +1827,8 @@ rule raxml_evaluate_Clade2:
             --msa $(basename {input.ref_fasta}) \
             --tree $(basename {input.tree}) \
             --model GTR+G \
-            --threads {threads} --force perf_threads
+            --threads {threads} --force perf_threads \
+            --redo
 
         """
 
@@ -2092,7 +2096,8 @@ rule raxml_evaluate_Clade3:
             --msa $(basename {input.ref_fasta}) \
             --tree $(basename {input.tree}) \
             --model GTR+G \
-            --threads {threads} --force perf_threads
+            --threads {threads} --force perf_threads \
+            --redo
 
         """
 
