@@ -25,8 +25,7 @@ suppressPackageStartupMessages({
 })
 
 # Parse a single coordinate token (one half of a split lat_lon pair) into a
-# signed decimal-degree value, with no external package dependency (parzer
-# has no conda-forge/bioconda build compatible with R 4.4). Handles every
+# signed decimal-degree value. Handles every
 # format observed in this pipeline's metadata plus DMS as a documented
 # extension: decimal + hemisphere letter ("24.75 N"), signed decimal with no
 # letter ("-69.648632"), and degrees[-minutes[-seconds]] with any separator
@@ -54,7 +53,7 @@ parse_coord <- function(x) {
 
 args <- commandArgs(trailingOnly = TRUE)
 metadata_csv       <- args[1]
-placement_files    <- c(apm = args[2], plagio = args[3], scuti = args[4])
+placement_files    <- c(Clade1 = args[2], Clade2 = args[3], Clade3 = args[4])
 cil_counts_tsv     <- args[5]
 una_counts_tsv     <- args[6]
 out_taxonomy_tsv   <- args[7]
@@ -201,11 +200,19 @@ parse_full <- function(fields) {
 
 tax_blocks <- lapply(names(placement_files), function(tree) {
     pq <- read.delim(placement_files[[tree]], colClasses = "character")
-    fields <- lapply(strsplit(pq$taxopath, ";", fixed = TRUE),
-                     function(x) x[x != ""])
-    block <- t(vapply(fields, parse_full, character(length(RANKS))))
-    rownames(block) <- pq$name
-    cbind(block, LWR = pq$LWR, placement_tree = tree)
+
+    block <- matrix(
+        "", nrow = nrow(pq), ncol = length(RANKS),
+        dimnames = list(pq$name, RANKS)
+    )
+
+    for (i in seq_len(nrow(pq))) {
+        fields <- strsplit(pq$taxopath[i], ";", fixed = TRUE)[[1]]
+        block[i, ] <- parse_full(fields[fields != ""])
+    }
+
+    cbind(block, LWR = pq$LWR,
+          placement_tree = rep(tree, nrow(pq)))
 })
 tax_mat <- do.call(rbind, tax_blocks)
 if (anyDuplicated(rownames(tax_mat))) {
