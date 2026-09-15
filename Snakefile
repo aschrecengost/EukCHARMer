@@ -51,24 +51,58 @@ CLADE_DIRS = [
     CLADE3_PLACEMENT,
 ]
 
-SELECTED_CLADE_TARGETS = [
-    target
-    for number, clade_dir in enumerate(CLADE_DIRS[:MAX_CLADE], start=1)
-    for target in (
-        clade_dir + "tree.svg",
-        clade_dir + f"Clade{number}_placed_seqs.fasta",
-    )
-]
+def clade_files(number):
+    query = getattr(
+        checkpoints, f"extract_Clade{number}_seqs"
+    ).get().output.fasta
 
-# The current R script requires results from all three clades.
-FIGURE_TARGETS = (
-    [
-        FIGURES + "taxa_barplot.pdf",
-        FIGURES + "sample_map.pdf",
+    with query.open() as handle:
+        has_hits = any(line.startswith(">") for line in handle)
+
+    if not has_hits:
+        table = TAXON_PLACEMENT + f"filtered_Clade{number}_LWR_EDPL.tsv"
+        return [query], table
+
+    folder = CLADE_DIRS[number - 1]
+    table = getattr(
+        checkpoints, f"filter_Clade{number}_final"
+    ).get().output.tsv
+
+    return [
+        query,
+        folder + "tree.svg",
+        folder + f"Clade{number}_placed_seqs.fasta",
+    ], table
+
+
+def SELECTED_CLADE_TARGETS(wildcards):
+    return [
+        path
+        for number in range(1, MAX_CLADE + 1)
+        for path in clade_files(number)[0]
     ]
-    if MAX_CLADE == 3
-    else []
-)
+
+
+def clade_report_input(number):
+    return lambda wildcards: clade_files(number)[1]
+
+
+def FIGURE_TARGETS(wildcards):
+    if MAX_CLADE != 3:
+        return []
+
+    import csv
+    tables = [clade_files(number)[1] for number in range(1, 4)]
+
+    for table in tables:
+        with open(str(table), newline="") as handle:
+            if any(csv.DictReader(handle, delimiter="\t")):
+                return [
+                    FIGURES + "taxa_barplot.pdf",
+                    FIGURES + "sample_map.pdf",
+                ]
+
+    return []
 # ---- END CLADE TREE CONFIGURATION ----
 
 # ---- METADATA CLEANING CONFIG ----
@@ -1419,7 +1453,7 @@ rule filter_Clade3_placements:
 
 # ---- CLADE1 PLACEMENT ----
 
-rule extract_Clade1_seqs:
+checkpoint extract_Clade1_seqs:
     input:
         tsv   = TAXON_PLACEMENT + "filtered_Clade1_LWR_EDPL.tsv",
         fasta = TAXON_PLACEMENT + "Taxon_seqs.fasta"
@@ -1658,7 +1692,7 @@ rule gappa_lwr_edpl_Clade1:
 
 # ---- CLADE1 PLACEMENT FILTERING
 
-rule filter_Clade1_final:
+checkpoint filter_Clade1_final:
     input:
         per_query = CLADE1_PLACEMENT + "per_query.tsv",
         lwr_list  = CLADE1_PLACEMENT + "lwr-list.csv",
@@ -1687,7 +1721,7 @@ rule extract_Clade1_final_seqs:
 
 # ---- CLADE 2 PLACEMENT ----
 
-rule extract_Clade2_seqs:
+checkpoint extract_Clade2_seqs:
     input:
         tsv   = TAXON_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv",
         fasta = TAXON_PLACEMENT + "Taxon_seqs.fasta"
@@ -1926,7 +1960,7 @@ rule gappa_lwr_edpl_Clade2:
 
 # ---- CLADE 2 PLACEMENT FILTERING
 
-rule filter_Clade2_final:
+checkpoint filter_Clade2_final:
     input:
         per_query = CLADE2_PLACEMENT + "per_query.tsv",
         lwr_list  = CLADE2_PLACEMENT + "lwr-list.csv",
@@ -1955,7 +1989,7 @@ rule extract_Clade2_final_seqs:
 
 # ---- CLADE 3 PLACEMENT ----
 
-rule extract_Clade3_seqs:
+checkpoint extract_Clade3_seqs:
     input:
         tsv   = TAXON_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv",
         fasta = TAXON_PLACEMENT + "Taxon_seqs.fasta"
@@ -2194,7 +2228,7 @@ rule gappa_lwr_edpl_Clade3:
 
 # ---- CLADE 3 PLACEMENT FILTERING
 
-rule filter_Clade3_final:
+checkpoint filter_Clade3_final:
     input:
         per_query = CLADE3_PLACEMENT + "per_query.tsv",
         lwr_list  = CLADE3_PLACEMENT + "lwr-list.csv",
@@ -2229,9 +2263,9 @@ rule prepare_phyloseq_objects:
     input:
         metadata = "documents/merged/merged_metadata.csv",
         envo_map = "reference/ENVO_IDs.csv",
-        Clade1 = CLADE1_PLACEMENT + "filtered_Clade1_LWR_EDPL.tsv",
-        Clade2 = CLADE2_PLACEMENT + "filtered_Clade2_LWR_EDPL.tsv",
-        Clade3 = CLADE3_PLACEMENT + "filtered_Clade3_LWR_EDPL.tsv",
+        Clade1 = clade_report_input(1),
+        Clade2 = clade_report_input(2),
+        Clade3 = clade_report_input(3),
         Taxon_counts = MERGED + "export/table/merged-Taxon-table.tsv",
         unassigned_counts = MERGED + "export/table/merged-unassigned-table.tsv"
     output:
